@@ -57,7 +57,7 @@ const dropdownItems = [
             aria-label="User menu"
           >
             <UAvatar
-              :src="sessionState.data?.user?.image ?? undefined"
+              :src="sessionState.data?.user?.avatarUrl ?? undefined"
               :alt="sessionState.data?.user?.name ?? 'User'"
               :text="userInitials"
               size="sm"

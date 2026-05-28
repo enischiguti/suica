@@ -22,6 +22,7 @@ async function saveSettings() {
       method: 'PATCH',
       body: { name: trimmed },
     })
+    await sessionState.value?.refetch()
     toast.add({
       title: 'Settings saved',
       description: 'Your display name has been updated.',
@@ -58,7 +59,7 @@ async function saveSettings() {
       <div class="space-y-6">
         <div class="flex justify-center">
           <UAvatar
-            :src="sessionState.data?.user?.image ?? undefined"
+            :src="sessionState.data?.user?.avatarUrl ?? undefined"
             :alt="sessionState.data?.user?.name ?? 'User'"
             size="3xl"
           />

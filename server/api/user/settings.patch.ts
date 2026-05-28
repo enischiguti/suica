@@ -1,14 +1,13 @@
+import type { H3Event } from 'h3'
 import { eq } from 'drizzle-orm'
 import { createError, defineEventHandler, readBody } from 'h3'
 import { useDB } from '~~/server/db/index'
 import { users } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
 
-export default defineEventHandler(async (event) => {
-  const session = await requireSession(event)
-
-  const body = await readBody(event)
-  const { name } = body ?? {}
+export async function applySettingsUpdate(userId: string, body: unknown) {
+  const payload = body !== null && typeof body === 'object' ? body : {}
+  const name = 'name' in payload ? payload.name : undefined
 
   if (typeof name !== 'string' || name.trim().length === 0) {
     throw createError({ statusCode: 400, message: 'Name must be a non-empty string' })
@@ -19,7 +18,7 @@ export default defineEventHandler(async (event) => {
   const updated = await useDB()
     .update(users)
     .set({ name: trimmedName, updatedAt: new Date() })
-    .where(eq(users.id, session.user.id))
+    .where(eq(users.id, userId))
     .returning({ id: users.id, name: users.name, email: users.email })
 
   const user = updated[0]
@@ -28,4 +27,10 @@ export default defineEventHandler(async (event) => {
   }
 
   return { id: user.id, name: user.name, email: user.email }
+}
+
+export default defineEventHandler(async (event: H3Event) => {
+  const session = await requireSession(event)
+  const body = await readBody(event)
+  return applySettingsUpdate(session.user.id, body)
 })
