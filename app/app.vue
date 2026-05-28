@@ -21,7 +21,7 @@ useSeoMeta({
   ogDescription: description,
 })
 
-const year = new Date().getFullYear()
+const year = getCurrentYear()
 </script>
 
 <template>

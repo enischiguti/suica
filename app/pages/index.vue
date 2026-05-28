@@ -83,8 +83,6 @@ const proPlanFeatures = [
   <div>
     <!-- Hero -->
     <UPageHero
-      title="Your internet presence, simplified"
-      description="Create your personal link page and automate your Instagram DMs — all in one place. Free to start."
       class="relative overflow-hidden"
     >
       <template #description>
@@ -168,11 +166,11 @@ const proPlanFeatures = [
     >
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         <!-- Free plan -->
-        <UPricingCard
+        <UPricingPlan
           title="Free"
           description="Get started at no cost."
           price="$0"
-          cycle="/mo"
+          billing-cycle="/mo"
           :features="freePlanFeatures"
           :button="{
             label: 'Get started free',
@@ -183,11 +181,9 @@ const proPlanFeatures = [
         />
 
         <!-- Pro plan -->
-        <UPricingCard
+        <UPricingPlan
           title="Pro"
           description="For creators who want to grow faster."
-          price="$9"
-          cycle="/mo"
           :features="proPlanFeatures"
           highlight
           badge="Most popular"
@@ -206,7 +202,7 @@ const proPlanFeatures = [
               </p>
             </div>
           </template>
-        </UPricingCard>
+        </UPricingPlan>
       </div>
     </UPageSection>
   </div>
