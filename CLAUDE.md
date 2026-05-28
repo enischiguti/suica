@@ -21,6 +21,7 @@
 - **Linting**: `@antfu/eslint-config` — run `pnpm lint:fix` to auto-fix style issues
 - **Server singletons**: DB, Redis, Stripe, and Mailgun clients are lazy singletons (`useDB()`, `useRedis()`, `useStripe()`) initialized inside functions so `useRuntimeConfig()` has context
 - **Pre-commit hook**: `pnpm lint && pnpm typecheck` runs automatically via `simple-git-hooks`
+- **Input validation**: use Zod for all server-side input validation at API boundaries. Use h3's validated helpers — `readValidatedBody(event, schema.parse)`, `getValidatedRouterParams(event, schema.parse)`, `getValidatedQuery(event, schema.parse)` — instead of `readBody` + manual type narrowing. Zod's `.parse()` throws a typed error that h3 converts to a 422 automatically. Install: `pnpm add zod`.
 
 ## Frontend guidelines
 
