@@ -45,6 +45,17 @@ function createAuth() {
         avatarUrl: { type: 'string', required: false, defaultValue: null },
       },
     },
+    databaseHooks: {
+      user: {
+        create: {
+          async before(user) {
+            // Copy OAuth profile image → avatarUrl on first sign-in only
+            const image = 'image' in user && typeof user.image === 'string' ? user.image : null
+            return { data: { ...user, avatarUrl: image } }
+          },
+        },
+      },
+    },
   })
 }
 

@@ -57,6 +57,9 @@ importers:
       eslint:
         specifier: ^9.0.0
         version: 9.39.4(jiti@2.7.0)
+      h3:
+        specifier: 1.15.11
+        version: 1.15.11
       simple-git-hooks:
         specifier: ^2.13.1
         version: 2.13.1

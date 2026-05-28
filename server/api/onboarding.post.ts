@@ -12,7 +12,7 @@ function isValidUseCase(value: unknown): value is UseCase {
 }
 
 export default defineEventHandler(async (event) => {
-  await requireSession(event)
+  const session = await requireSession(event)
 
   const body = await readBody(event)
   const { username, useCase } = body ?? {}
@@ -28,8 +28,6 @@ export default defineEventHandler(async (event) => {
   if (!isValidUseCase(useCase)) {
     throw createError({ statusCode: 400, message: 'Invalid use case' })
   }
-
-  const session = await requireSession(event)
 
   // Race condition guard: check if username is taken
   const existing = await useDB().query.users.findFirst({
