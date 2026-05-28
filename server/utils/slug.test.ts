@@ -1,22 +1,23 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock useDB and drizzle-orm for generateUniqueSlug
+const mockLimit = vi.fn()
+
 vi.mock('~~/server/db/index', () => ({
-  useDB: vi.fn(),
+  useDB: vi.fn(() => ({
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({ limit: mockLimit }),
+      }),
+    }),
+  })),
 }))
 
 vi.mock('drizzle-orm', async (importOriginal) => {
   const actual = await importOriginal<typeof import('drizzle-orm')>()
-  return {
-    ...actual,
-    eq: vi.fn(() => 'eq-result'),
-    and: vi.fn(() => 'and-result'),
-  }
+  return { ...actual, eq: vi.fn(() => 'eq-result'), and: vi.fn(() => 'and-result') }
 })
 
 const { slugify, isValidSlug, generateUniqueSlug } = await import('./slug')
-const { useDB } = await import('~~/server/db/index')
-const mockUseDB = vi.mocked(useDB)
 
 describe('slugify', () => {
   it('converts spaces to hyphens', () => {
@@ -36,8 +37,7 @@ describe('slugify', () => {
   })
 
   it('truncates at 60 chars', () => {
-    const long = 'a'.repeat(70)
-    expect(slugify(long)).toHaveLength(60)
+    expect(slugify('a'.repeat(70))).toHaveLength(60)
   })
 
   it('handles empty string', () => {
@@ -76,62 +76,40 @@ describe('isValidSlug', () => {
   })
 
   it('rejects slugs longer than 64 chars', () => {
-    const long = 'a'.repeat(65)
-    expect(isValidSlug(long)).toBe(false)
+    expect(isValidSlug('a'.repeat(65))).toBe(false)
   })
 
   it('accepts slugs of exactly 64 chars', () => {
-    const max = 'a'.repeat(64)
-    expect(isValidSlug(max)).toBe(true)
+    expect(isValidSlug('a'.repeat(64))).toBe(true)
   })
 })
 
 describe('generateUniqueSlug', () => {
-  function makeDbMock(existingCount: number) {
-    let callCount = 0
-    return {
-      select: vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockImplementation(() => {
-              callCount++
-              // Return existing rows for the first N attempts
-              return Promise.resolve(callCount <= existingCount ? [{ id: 'taken' }] : [])
-            }),
-          }),
-        }),
-      }),
-    }
-  }
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('returns base slug when no collision', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock(0) as unknown as ReturnType<typeof useDB>)
-
+    mockLimit.mockResolvedValue([])
     const slug = await generateUniqueSlug('Hello World', 'user-1')
     expect(slug).toBe('hello-world')
   })
 
   it('appends suffix when base slug is taken', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock(1) as unknown as ReturnType<typeof useDB>)
-
+    // First call (base slug) is taken, second (with suffix) is free
+    mockLimit.mockResolvedValueOnce([{ id: 'taken' }]).mockResolvedValue([])
     const slug = await generateUniqueSlug('Hello World', 'user-1')
     expect(slug).toMatch(/^hello-world-[a-z0-9]{4}$/)
   })
 
   it('uses "link" as base when title produces empty slug', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock(0) as unknown as ReturnType<typeof useDB>)
-
+    mockLimit.mockResolvedValue([])
     const slug = await generateUniqueSlug('!!!', 'user-1')
     expect(slug).toBe('link')
   })
 
   it('throws after 5 failed attempts', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock(10) as unknown as ReturnType<typeof useDB>)
-
+    mockLimit.mockResolvedValue([{ id: 'taken' }])
     await expect(generateUniqueSlug('Hello World', 'user-1')).rejects.toThrow()
   })
 })
