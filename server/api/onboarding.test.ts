@@ -17,7 +17,7 @@ vi.mock('~~/server/db/index', () => ({
   useDB: vi.fn(),
 }))
 
-const mockReadBody = vi.fn()
+const mockReadValidatedBody = vi.fn()
 
 // Mock h3
 vi.mock('h3', async (importOriginal) => {
@@ -25,7 +25,7 @@ vi.mock('h3', async (importOriginal) => {
   return {
     ...actual,
     defineEventHandler: (fn: (event: unknown) => unknown) => fn,
-    readBody: (...args: unknown[]) => mockReadBody(...args),
+    readValidatedBody: (...args: unknown[]) => mockReadValidatedBody(...args),
   }
 })
 
@@ -75,28 +75,28 @@ describe('post /api/onboarding', () => {
 
   it('returns 401 when unauthenticated', async () => {
     mockRequireSession.mockRejectedValue(Object.assign(new Error('Unauthorized'), { statusCode: 401 }))
-    mockReadBody.mockResolvedValue({ username: 'johndoe', useCase: 'personal-page' })
+    mockReadValidatedBody.mockResolvedValue({ username: 'johndoe', useCase: 'personal-page' })
 
     await expect(handler(makeEvent())).rejects.toMatchObject({ statusCode: 401 })
   })
 
-  it('returns 400 for invalid useCase', async () => {
+  it('returns 422 for invalid useCase', async () => {
     mockRequireSession.mockResolvedValue(mockSession)
-    mockReadBody.mockResolvedValue({ username: 'johndoe', useCase: 'invalid-case' })
+    mockReadValidatedBody.mockRejectedValue(Object.assign(new Error('Validation error'), { statusCode: 422 }))
 
-    await expect(handler(makeEvent())).rejects.toMatchObject({ statusCode: 400 })
+    await expect(handler(makeEvent())).rejects.toMatchObject({ statusCode: 422 })
   })
 
   it('returns 400 for reserved username', async () => {
     mockRequireSession.mockResolvedValue(mockSession)
-    mockReadBody.mockResolvedValue({ username: 'admin', useCase: 'personal-page' })
+    mockReadValidatedBody.mockResolvedValue({ username: 'admin', useCase: 'personal-page' })
 
     await expect(handler(makeEvent())).rejects.toMatchObject({ statusCode: 400 })
   })
 
   it('returns { ok: true } for valid payload and updates DB', async () => {
     mockRequireSession.mockResolvedValue(mockSession)
-    mockReadBody.mockResolvedValue({ username: 'johndoe', useCase: 'personal-page' })
+    mockReadValidatedBody.mockResolvedValue({ username: 'johndoe', useCase: 'personal-page' })
 
     const result = await handler(makeEvent())
     expect(result).toEqual({ ok: true })

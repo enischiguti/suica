@@ -1,9 +1,20 @@
 import { and, eq } from 'drizzle-orm'
-import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
+import { createError, defineEventHandler, getValidatedRouterParams, readValidatedBody } from 'h3'
+import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { links } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
 import { isValidSlug } from '~~/server/utils/slug'
+
+const updateLinkParamsSchema = z.object({ id: z.string() })
+
+const updateLinkBodySchema = z.object({
+  title: z.string().min(1).optional(),
+  destinationUrl: z.string().url().optional(),
+  slug: z.string().regex(/^[a-z0-9-]+$/).optional(),
+  showOnPage: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+})
 
 export interface UpdateLinkBody {
   title?: unknown
@@ -96,7 +107,7 @@ export async function applyUpdateLink(
 
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event)
-  const id = getRouterParam(event, 'id') ?? ''
-  const body = await readBody<UpdateLinkBody>(event)
-  return applyUpdateLink(id, session.user.id, body ?? {})
+  const { id } = await getValidatedRouterParams(event, updateLinkParamsSchema.parse)
+  const body = await readValidatedBody(event, updateLinkBodySchema.parse)
+  return applyUpdateLink(id, session.user.id, body)
 })

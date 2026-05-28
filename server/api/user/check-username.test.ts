@@ -13,15 +13,15 @@ vi.mock('~~/server/db/index', () => ({
   useDB: vi.fn(),
 }))
 
-const mockGetQuery = vi.fn()
+const mockGetValidatedQuery = vi.fn()
 
-// Mock h3 so defineEventHandler passes through and getQuery is mockable
+// Mock h3 so defineEventHandler passes through and getValidatedQuery is mockable
 vi.mock('h3', async (importOriginal) => {
   const actual = await importOriginal<typeof import('h3')>()
   return {
     ...actual,
     defineEventHandler: (fn: (event: unknown) => unknown) => fn,
-    getQuery: (...args: unknown[]) => mockGetQuery(...args),
+    getValidatedQuery: (...args: unknown[]) => mockGetValidatedQuery(...args),
   }
 })
 
@@ -53,25 +53,25 @@ describe('get /api/user/check-username', () => {
   })
 
   it('returns { available: false } for invalid format', async () => {
-    mockGetQuery.mockReturnValue({ username: 'Invalid!' })
+    mockGetValidatedQuery.mockResolvedValue({ username: 'Invalid!' })
     const result = await handler(makeEvent())
     expect(result).toEqual({ available: false })
   })
 
   it('returns { available: false } for too short username', async () => {
-    mockGetQuery.mockReturnValue({ username: 'ab' })
+    mockGetValidatedQuery.mockResolvedValue({ username: 'ab' })
     const result = await handler(makeEvent())
     expect(result).toEqual({ available: false })
   })
 
   it('returns { available: false } for reserved username', async () => {
-    mockGetQuery.mockReturnValue({ username: 'admin' })
+    mockGetValidatedQuery.mockResolvedValue({ username: 'admin' })
     const result = await handler(makeEvent())
     expect(result).toEqual({ available: false })
   })
 
   it('returns { available: false } for taken username', async () => {
-    mockGetQuery.mockReturnValue({ username: 'johndoe' })
+    mockGetValidatedQuery.mockResolvedValue({ username: 'johndoe' })
     // eslint-disable-next-line ts/consistent-type-assertions
     mockUseDB.mockReturnValue(makeMockDb({ id: 'other-user', username: 'johndoe' }) as unknown as ReturnType<typeof useDB>)
     const result = await handler(makeEvent())
@@ -79,7 +79,7 @@ describe('get /api/user/check-username', () => {
   })
 
   it('returns { available: true } for free username', async () => {
-    mockGetQuery.mockReturnValue({ username: 'johndoe' })
+    mockGetValidatedQuery.mockResolvedValue({ username: 'johndoe' })
     // eslint-disable-next-line ts/consistent-type-assertions
     mockUseDB.mockReturnValue(makeMockDb(null) as unknown as ReturnType<typeof useDB>)
     const result = await handler(makeEvent())

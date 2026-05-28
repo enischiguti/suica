@@ -1,9 +1,14 @@
 import type { H3Event } from 'h3'
 import { eq } from 'drizzle-orm'
-import { createError, defineEventHandler, readBody } from 'h3'
+import { createError, defineEventHandler, readValidatedBody } from 'h3'
+import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { users } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
+
+const settingsSchema = z.object({
+  name: z.string().min(1),
+})
 
 export async function applySettingsUpdate(userId: string, body: unknown) {
   const payload = body !== null && typeof body === 'object' ? body : {}
@@ -31,6 +36,6 @@ export async function applySettingsUpdate(userId: string, body: unknown) {
 
 export default defineEventHandler(async (event: H3Event) => {
   const session = await requireSession(event)
-  const body = await readBody(event)
+  const body = await readValidatedBody(event, settingsSchema.parse)
   return applySettingsUpdate(session.user.id, body)
 })

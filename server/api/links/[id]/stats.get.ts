@@ -1,9 +1,12 @@
 import type { H3Event } from 'h3'
 import { count, desc, eq } from 'drizzle-orm'
-import { createError, defineEventHandler, getRouterParam } from 'h3'
+import { createError, defineEventHandler, getValidatedRouterParams } from 'h3'
+import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { linkClicks, links } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
+
+const statsParamsSchema = z.object({ id: z.string() })
 
 export async function applyGetLinkStats(linkId: string, userId: string) {
   const db = useDB()
@@ -56,6 +59,6 @@ export async function applyGetLinkStats(linkId: string, userId: string) {
 
 export default defineEventHandler(async (event: H3Event) => {
   const session = await requireSession(event)
-  const id = getRouterParam(event, 'id') ?? ''
+  const { id } = await getValidatedRouterParams(event, statsParamsSchema.parse)
   return applyGetLinkStats(id, session.user.id)
 })

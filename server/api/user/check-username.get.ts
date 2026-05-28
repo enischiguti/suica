@@ -1,4 +1,5 @@
-import { defineEventHandler, getQuery } from 'h3'
+import { defineEventHandler, getValidatedQuery } from 'h3'
+import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { requireSession } from '~~/server/utils/session'
 import { isReservedUsername, isValidUsernameFormat } from '~/utils/username'
@@ -6,10 +7,10 @@ import { isReservedUsername, isValidUsernameFormat } from '~/utils/username'
 export default defineEventHandler(async (event) => {
   await requireSession(event)
 
-  const query = getQuery(event)
-  const username = query.username
+  const query = await getValidatedQuery(event, z.object({ username: z.string() }).parse)
+  const { username } = query
 
-  if (typeof username !== 'string' || !isValidUsernameFormat(username)) {
+  if (!isValidUsernameFormat(username)) {
     return { available: false }
   }
 
