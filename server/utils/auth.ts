@@ -7,6 +7,7 @@ function createAuth() {
   return betterAuth({
     secret: useRuntimeConfig().betterAuthSecret,
     baseURL: useRuntimeConfig().betterAuthUrl,
+    basePath: '/auth',
     database: drizzleAdapter(useDB(), { provider: 'pg' }),
     emailAndPassword: { enabled: false },
     plugins: [
