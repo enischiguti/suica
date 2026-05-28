@@ -22,6 +22,8 @@ export default defineNuxtConfig({
     redisUrl: process.env.REDIS_URL ?? '',
     stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? '',
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',
+    stripeMonthlyPriceId: process.env.STRIPE_MONTHLY_PRICE_ID ?? '',
+    stripeAnnualPriceId: process.env.STRIPE_ANNUAL_PRICE_ID ?? '',
     mailgunApiKey: process.env.MAILGUN_API_KEY ?? '',
     mailgunDomain: process.env.MAILGUN_DOMAIN ?? '',
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? '',
