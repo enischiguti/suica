@@ -1,0 +1,47 @@
+{
+  "name": "suica",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@11.1.3",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "prepare": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "tsc": "npx nuxt typecheck",
+    "typecheck": "nuxt typecheck",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.108",
+    "@iconify-json/simple-icons": "^1.2.83",
+    "@nuxt/ui": "^4.7.1",
+    "bullmq": "^5.0.0",
+    "drizzle-orm": "^0.44.0",
+    "form-data": "^4.0.1",
+    "ioredis": "^5.6.0",
+    "mailgun.js": "^12.0.0",
+    "nuxt": "^4.4.6",
+    "nuxt-auth-utils": "^0.5.0",
+    "postgres": "^3.4.5",
+    "stripe": "^17.0.0",
+    "tailwindcss": "^4.3.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^9.0.0",
+    "drizzle-kit": "^0.31.0",
+    "eslint": "^9.0.0",
+    "simple-git-hooks": "^2.13.1",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.0"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint && pnpm typecheck"
+  }
+}
