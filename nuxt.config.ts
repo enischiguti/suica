@@ -30,8 +30,13 @@ export default defineNuxtConfig({
     cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID ?? '',
     cloudflareImagesToken: process.env.CLOUDFLARE_IMAGES_TOKEN ?? '',
     cloudflareImagesHash: process.env.CLOUDFLARE_IMAGES_HASH ?? '',
+    instagramAppId: process.env.INSTAGRAM_APP_ID ?? '',
+    instagramAppSecret: process.env.INSTAGRAM_APP_SECRET ?? '',
+    instagramWebhookSecret: process.env.INSTAGRAM_WEBHOOK_SECRET ?? '',
+    encryptionKey: process.env.ENCRYPTION_KEY ?? '',
     public: {
       cloudflareImagesHash: process.env.CLOUDFLARE_IMAGES_HASH ?? '',
+      baseUrl: process.env.BASE_URL ?? 'http://localhost:3000',
     },
     oauth: {
       google: {
