@@ -72,13 +72,18 @@ Tasks live in `tasks/`. The index at `tasks/index.md` is the source of truth for
 When asked to **"run tasks"**:
 1. Read `tasks/index.md` — find the first `⬜ todo` row
 2. Update its status to `🔄 progress`
-3. Read the full spec from the linked file (e.g. `tasks/001-auth-flow.md`)
-4. Spawn a sub-agent (Agent tool) with the spec + the conventions from this file
-5. After the agent completes, verify acceptance criteria
-6. Update status to `✅ done` — or `🚫 blocked` with a note in the spec's Notes section if it failed
-7. Continue to the next `⬜ todo` task, or stop if the user said "work on task NNN" (single task)
+3. Read the full spec from the linked file (e.g. `tasks/001-landing-page.md`)
+4. Spawn an **implementation agent** (Agent tool) with the spec + the conventions from this file; instruct it to:
+   - Create and check out branch `task/NNN-short-title` (e.g. `task/001-landing-page`)
+   - Implement the spec, run `pnpm test && pnpm lint && pnpm typecheck`
+   - Push the branch and open a PR titled `[Task NNN] Title` targeting `main`
+5. Once the implementation agent completes, spawn a **review agent** (Agent tool, `subagent_type: code-review`) pointing it at the PR number
+6. If the review passes: merge the PR, update task status to `✅ done`
+7. If the review surfaces blocking issues: leave the task as `🔄 progress`, add a note in the spec's Notes section, and fix before re-requesting review
+8. If the task cannot proceed: set status to `🚫 blocked` with a note in the spec's Notes section
+9. Continue to the next `⬜ todo` task, or stop if the user said "work on task NNN" (single task)
 
-When asked to **"work on task NNN"**: run only that task (steps 2–6 above).
+When asked to **"work on task NNN"**: run only that task (steps 2–8 above).
 
 ### Editing vs. creating tasks
 
