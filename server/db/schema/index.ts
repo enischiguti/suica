@@ -1,4 +1,6 @@
 export * from '~~/server/db/schema/accounts'
+export * from '~~/server/db/schema/link-clicks'
+export * from '~~/server/db/schema/links'
 export * from '~~/server/db/schema/sessions'
 export * from '~~/server/db/schema/users'
 export * from '~~/server/db/schema/verifications'

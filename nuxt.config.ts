@@ -26,6 +26,7 @@ export default defineNuxtConfig({
     mailgunDomain: process.env.MAILGUN_DOMAIN ?? '',
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? '',
     betterAuthUrl: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
+    analyticsSecret: process.env.ANALYTICS_SALT ?? '',
     oauth: {
       google: {
         clientId: process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID ?? '',
