@@ -1,12 +1,20 @@
 import { and, count, eq } from 'drizzle-orm'
 
-import { createError, defineEventHandler, readBody } from 'h3'
+import { createError, defineEventHandler, readValidatedBody } from 'h3'
+import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { links } from '~~/server/db/schema'
 import { canAddLink, getUserPlan } from '~~/server/utils/plan'
 import { requireSession } from '~~/server/utils/session'
 import { generateUniqueSlug, isValidSlug } from '~~/server/utils/slug'
 import { PLANS } from '~~/shared/plans'
+
+const createLinkSchema = z.object({
+  title: z.string().min(1),
+  destinationUrl: z.string().min(1),
+  slug: z.string().optional(),
+  showOnPage: z.boolean().optional(),
+})
 
 export interface CreateLinkBody {
   title: unknown
@@ -98,6 +106,6 @@ export async function applyCreateLink(userId: string, body: CreateLinkBody) {
 
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event)
-  const body = await readBody<CreateLinkBody>(event)
-  return applyCreateLink(session.user.id, body ?? {})
+  const body = await readValidatedBody(event, createLinkSchema.parse)
+  return applyCreateLink(session.user.id, body)
 })
