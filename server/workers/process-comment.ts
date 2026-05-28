@@ -10,6 +10,7 @@ export interface ProcessCommentJob {
   igAccountId: string
   commentId: string
   postId: string
+  commenterId: string
   commenterUsername: string
   commentText: string
   commentedAt: string
@@ -24,7 +25,7 @@ const graphApiResponseSchema = z.object({
 })
 
 export async function processComment(data: ProcessCommentJob): Promise<void> {
-  const { igAccountId, commentId, postId, commenterUsername, commentText, commentedAt } = data
+  const { igAccountId, commentId, postId, commenterId, commenterUsername, commentText, commentedAt } = data
   const db = useDB()
 
   // 1. Staleness check
@@ -32,7 +33,7 @@ export async function processComment(data: ProcessCommentJob): Promise<void> {
   if (commentAge > STALE_THRESHOLD_MS) {
     await db.insert(automationLogs).values({
       id: crypto.randomUUID(),
-      automationId: '',
+      automationId: null,
       igCommentId: commentId,
       commenterUsername,
       status: 'dropped',
@@ -124,7 +125,7 @@ export async function processComment(data: ProcessCommentJob): Promise<void> {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        recipient: { id: igUserId },
+        recipient: { id: commenterId },
         message: { text: message },
         access_token: accessToken,
       }),

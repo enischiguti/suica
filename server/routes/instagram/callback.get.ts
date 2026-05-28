@@ -1,4 +1,6 @@
-import { defineEventHandler, getValidatedQuery, sendRedirect } from 'h3'
+import { Buffer } from 'node:buffer'
+import { createHmac, timingSafeEqual } from 'node:crypto'
+import { createError, defineEventHandler, getValidatedQuery, sendRedirect } from 'h3'
 import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { instagramAccounts } from '~~/server/db/schema'
@@ -27,7 +29,22 @@ const igUserSchema = z.object({
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const { code, state: userId } = await getValidatedQuery(event, querySchema.parse)
+  const { code, state } = await getValidatedQuery(event, querySchema.parse)
+
+  // Verify CSRF: state = `${userId}.${hmac(userId, secret)}`
+  const dotIdx = state.lastIndexOf('.')
+  if (dotIdx === -1) {
+    throw createError({ statusCode: 400, message: 'Invalid state' })
+  }
+  const userId = state.slice(0, dotIdx)
+  const receivedSig = state.slice(dotIdx + 1)
+  const expectedSig = createHmac('sha256', config.betterAuthSecret).update(userId).digest('hex')
+  const sigMatch = receivedSig.length === expectedSig.length
+    && timingSafeEqual(Buffer.from(receivedSig, 'hex'), Buffer.from(expectedSig, 'hex'))
+  if (!sigMatch) {
+    throw createError({ statusCode: 400, message: 'Invalid state' })
+  }
+
   const callbackUrl = `${config.public.baseUrl}/instagram/callback`
 
   // Exchange code for short-lived token
@@ -40,6 +57,9 @@ export default defineEventHandler(async (event) => {
   })
 
   const shortLivedRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?${shortLivedParams.toString()}`)
+  if (!shortLivedRes.ok) {
+    throw createError({ statusCode: 502, message: 'Failed to exchange code for token' })
+  }
   const shortLivedData = shortLivedTokenSchema.parse(await shortLivedRes.json())
 
   // Exchange short-lived for long-lived token
@@ -51,10 +71,16 @@ export default defineEventHandler(async (event) => {
   })
 
   const longLivedRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?${longLivedParams.toString()}`)
+  if (!longLivedRes.ok) {
+    throw createError({ statusCode: 502, message: 'Failed to exchange for long-lived token' })
+  }
   const longLivedData = longLivedTokenSchema.parse(await longLivedRes.json())
 
   // Fetch IG user
   const igUserRes = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,username&access_token=${longLivedData.access_token}`)
+  if (!igUserRes.ok) {
+    throw createError({ statusCode: 502, message: 'Failed to fetch Instagram user' })
+  }
   const igUser = igUserSchema.parse(await igUserRes.json())
 
   const encryptedToken = encryptToken(longLivedData.access_token)

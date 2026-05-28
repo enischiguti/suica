@@ -1,8 +1,8 @@
-import { eq, max } from 'drizzle-orm'
+import { and, eq, max } from 'drizzle-orm'
 import { createError, defineEventHandler, readValidatedBody } from 'h3'
 import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
-import { automations } from '~~/server/db/schema'
+import { automations, instagramAccounts } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
 
 const createAutomationSchema = z.object({
@@ -18,6 +18,16 @@ export type CreateAutomationBody = z.infer<typeof createAutomationSchema>
 
 export async function applyCreateAutomation(userId: string, body: CreateAutomationBody) {
   const db = useDB()
+
+  const igAccount = await db
+    .select({ id: instagramAccounts.id })
+    .from(instagramAccounts)
+    .where(and(eq(instagramAccounts.id, body.igAccountId), eq(instagramAccounts.userId, userId)))
+    .limit(1)
+
+  if (!igAccount[0]) {
+    throw createError({ statusCode: 400, message: 'Instagram account not found' })
+  }
 
   const maxResult = await db
     .select({ maxPriority: max(automations.priority) })

@@ -71,6 +71,7 @@ interface JobData {
   igAccountId?: string
   commentId?: string
   postId?: string
+  commenterId?: string
   commenterUsername?: string
   commentText?: string
   commentedAt?: string
@@ -81,6 +82,7 @@ function makeJobData(overrides: JobData = {}) {
     igAccountId: 'acc-1',
     commentId: 'comment-1',
     postId: 'post123',
+    commenterId: 'ig-commenter-id',
     commenterUsername: 'alice',
     commentText: 'nice post!',
     commentedAt: new Date().toISOString(),

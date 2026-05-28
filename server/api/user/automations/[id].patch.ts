@@ -1,8 +1,8 @@
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { createError, defineEventHandler, readValidatedBody } from 'h3'
 import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
-import { automations } from '~~/server/db/schema'
+import { automations, instagramAccounts } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
 
 const updateAutomationSchema = z.object({
@@ -35,6 +35,18 @@ export async function applyUpdateAutomation(automationId: string, userId: string
 
   if (automation.userId !== userId) {
     throw createError({ statusCode: 403, message: 'Forbidden' })
+  }
+
+  if (body.igAccountId !== undefined) {
+    const igAccount = await db
+      .select({ id: instagramAccounts.id })
+      .from(instagramAccounts)
+      .where(and(eq(instagramAccounts.id, body.igAccountId), eq(instagramAccounts.userId, userId)))
+      .limit(1)
+
+    if (!igAccount[0]) {
+      throw createError({ statusCode: 400, message: 'Instagram account not found' })
+    }
   }
 
   const updates: Partial<typeof automation> & { updatedAt: Date } = { updatedAt: new Date() }

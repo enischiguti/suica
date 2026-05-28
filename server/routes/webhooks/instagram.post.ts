@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
 
       const value = change.value
       const { comment_id: commentId, post_id: postId } = value
+      const commenterId = value.from?.id ?? ''
       const commenterUsername = value.from?.username ?? ''
       const commentText = value.message ?? ''
       const timestamp = value.timestamp ?? 0
@@ -82,6 +83,7 @@ export default defineEventHandler(async (event) => {
         igAccountId,
         commentId,
         postId,
+        commenterId,
         commenterUsername,
         commentText,
         commentedAt: new Date(timestamp * 1000).toISOString(),
@@ -96,6 +98,7 @@ export interface ProcessCommentJob {
   igAccountId: string
   commentId: string
   postId: string
+  commenterId: string
   commenterUsername: string
   commentText: string
   commentedAt: string

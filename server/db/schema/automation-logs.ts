@@ -3,7 +3,7 @@ import { automations } from '~~/server/db/schema/automations'
 
 export const automationLogs = pgTable('automation_logs', {
   id: text('id').primaryKey(),
-  automationId: text('automation_id').notNull().references(() => automations.id, { onDelete: 'cascade' }),
+  automationId: text('automation_id').references(() => automations.id, { onDelete: 'cascade' }),
   igCommentId: text('ig_comment_id').notNull(),
   commenterUsername: text('commenter_username'),
   status: text('status').notNull(),

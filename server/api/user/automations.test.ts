@@ -102,9 +102,10 @@ describe('automations CRUD', () => {
       let callCount = 0
       mockSelectRows.mockImplementation(() => {
         const idx = callCount++
-        if (idx === 0) {
-          return makeSelectChain([{ maxPriority: 2 }])
-        }
+        if (idx === 0)
+          return makeSelectChain([{ id: 'acc-1' }]) // igAccount ownership check
+        if (idx === 1)
+          return makeSelectChain([{ maxPriority: 2 }]) // max priority
         return makeSelectChain([])
       })
 
@@ -139,9 +140,10 @@ describe('automations CRUD', () => {
       let callCount = 0
       mockSelectRows.mockImplementation(() => {
         const idx = callCount++
-        if (idx === 0) {
-          return makeSelectChain([{ maxPriority: null }])
-        }
+        if (idx === 0)
+          return makeSelectChain([{ id: 'acc-1' }]) // igAccount ownership check
+        if (idx === 1)
+          return makeSelectChain([{ maxPriority: null }]) // max priority
         return makeSelectChain([])
       })
 
@@ -169,6 +171,18 @@ describe('automations CRUD', () => {
       })
 
       expect(mockInsertCalled).toHaveBeenCalledWith(expect.objectContaining({ priority: 0 }))
+    })
+
+    it('throws 400 when igAccountId does not belong to user', async () => {
+      mockSelectRows.mockReturnValue(makeSelectChain([]))
+
+      const { applyCreateAutomation } = await import('./automations.post')
+      await expect(applyCreateAutomation('user-1', {
+        name: 'Test',
+        igAccountId: 'other-acc',
+        postIds: ['post1'],
+        message: 'Hello!',
+      })).rejects.toMatchObject({ statusCode: 400 })
     })
   })
 
