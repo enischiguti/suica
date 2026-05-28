@@ -27,6 +27,12 @@ export default defineNuxtConfig({
     betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? '',
     betterAuthUrl: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
     analyticsSecret: process.env.ANALYTICS_SALT ?? '',
+    cloudflareAccountId: process.env.CLOUDFLARE_ACCOUNT_ID ?? '',
+    cloudflareImagesToken: process.env.CLOUDFLARE_IMAGES_TOKEN ?? '',
+    cloudflareImagesHash: process.env.CLOUDFLARE_IMAGES_HASH ?? '',
+    public: {
+      cloudflareImagesHash: process.env.CLOUDFLARE_IMAGES_HASH ?? '',
+    },
     oauth: {
       google: {
         clientId: process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID ?? '',
