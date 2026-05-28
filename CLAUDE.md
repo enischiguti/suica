@@ -65,6 +65,11 @@ When asked to **"run tasks"**:
 
 When asked to **"work on task NNN"**: run only that task (steps 2–6 above).
 
+### Editing vs. creating tasks
+
+- **⬜ todo** — spec can be edited freely in place.
+- **🔄 progress / ✅ done / 🚫 blocked** — the spec is frozen. Any improvement or follow-up must become a **new task** appended to `tasks/index.md`.
+
 ### Task file format
 
 See `tasks/000-template.md` for the canonical spec structure.
