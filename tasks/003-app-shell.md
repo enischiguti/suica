@@ -9,7 +9,7 @@ Build the authenticated app shell: the `/app` home screen with feature entry car
 - Top navigation bar (sticky):
   - Left: Suica logo/wordmark linking to `/app`
   - Right: user avatar (`<UAvatar>`) + dropdown menu with "Account" (`/app/settings`) and "Log out"
-- Logout action: POST/GET to `/auth/logout` then redirect to `/`
+- Logout action: call `authClient.signOut()` then redirect to `/`
 - Apply this layout to all `/app/**` pages via `definePageMeta({ layout: 'app' })`
 - All `/app/**` pages live under `app/pages/app/` (e.g. `app/pages/app/index.vue`, `app/pages/app/settings.vue`)
 
