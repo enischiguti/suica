@@ -21,12 +21,17 @@ Build the public-facing landing page at `/`. Suica means "watermelon" in Japanes
 - Subtle watermelon-inspired decorative element (green + rose accent, SVG or emoji, keep it tasteful)
 
 ### Features section (`id="features"`)
-Six feature cards in a 3-column grid (2-column on tablet, 1-column on mobile), two groups:
+Nine feature cards in a 3-column grid (2-column on tablet, 1-column on mobile), three groups with a labelled group heading above each row:
 
 **Personal page**
 - "Your links, your way" — Curate everything that matters in one shareable page
 - "Your own URL" — Live at `su1.ca/username`, yours to customize
 - "Share anything" — Links, social profiles, contact info, and more
+
+**Short links**
+- "Your personal URL shortener" — Create short links at `su1.ca/username/anything` in seconds
+- "Edit the destination anytime" — Change where a link points without touching the URL
+- "See who's clicking" — Track clicks, referrers, devices, and countries per link
 
 **Instagram automation**
 - "Auto-reply DMs" — Send a DM automatically when someone comments on your post
@@ -46,6 +51,7 @@ Six feature cards in a 3-column grid (2-column on tablet, 1-column on mobile), t
 - [ ] `/` renders hero, features, and footer with correct copy
 - [ ] "Get started free" navigates to `/login`
 - [ ] Nuxt UI theme uses green primary and rose secondary
+- [ ] All three feature groups render with their group headings
 - [ ] Feature grid is responsive (3 cols desktop → 2 tablet → 1 mobile)
 - [ ] Footer copyright year is dynamic
 - [ ] `pnpm lint` and `pnpm typecheck` pass
