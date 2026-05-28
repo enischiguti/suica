@@ -1,7 +1,7 @@
 # 006 — Personal page (public profile)
 
 ## Goal
-Build the public-facing personal page at `su1.ca/username` and the in-app editor at `/app/page`. Users can display their profile photo, bio, social icon links, and a curated selection of their short links. They can pick a preset theme for the page's appearance.
+Build the public-facing personal page at `su1.ca/username` and the in-app editor at `/app/page`. Users can display their profile photo, bio, social icon links, and a curated selection of their short links. They can pick a preset theme and choose between their OAuth avatar or a custom uploaded image (via Cloudflare Images).
 
 ## Specs
 
@@ -20,7 +20,7 @@ updatedAt   timestamp  defaultNow()
 
 Platforms for socials: `instagram | x | tiktok | youtube | linkedin | github | website`
 
-Profile photo comes from `users.avatarUrl` (OAuth-provided) — no upload in this task.
+Add `customAvatarUrl` column to `page_profiles`: `text('custom_avatar_url')` nullable. When set, it takes precedence over `users.avatarUrl` on the public page and in the editor preview.
 
 ### Preset themes (stored as `theme` string)
 Define in `app/utils/themes.ts` (or similar) — each theme has a `bg`, `cardBg`, `text`, `button` color set:
@@ -36,7 +36,7 @@ Actually implement this as a Nuxt page:
 - Fetch profile + links from `GET /api/public/[username]` server route
 - Layout: no top nav (standalone page, different layout or `layout: false`)
 - Display:
-  - Avatar (circular, from `users.avatarUrl`)
+  - Avatar (circular, from `page_profiles.customAvatarUrl` if set, else `users.avatarUrl`)
   - Display name
   - Bio (if set)
   - Social icons row (icon buttons linking to each platform URL)
@@ -47,32 +47,67 @@ Actually implement this as a Nuxt page:
 
 **`GET /api/public/[username]`** (`server/api/public/[username].get.ts`):
 - No auth required
-- Returns: `{ user: { name, avatarUrl, username }, profile: { bio, theme, socials }, links: Link[] }`
+- Returns: `{ user: { name, avatarUrl, username }, profile: { bio, theme, socials, customAvatarUrl }, links: Link[] }`
+- Avatar resolution logic lives in the API: return `customAvatarUrl ?? avatarUrl` as the effective avatar
 - 404 if user not found
 
 ### Page editor `/app/page`
 
 - Live preview panel on the right (desktop) showing how the page looks, updates as user edits
 - Left panel — edit sections:
+  - **Avatar**: circular preview showing the current effective avatar; two options below it:
+    - "Use account avatar" — resets `customAvatarUrl` to null (uses OAuth avatar)
+    - "Upload image" — file picker (JPG/PNG/WebP, max 5 MB); triggers the Cloudflare Images upload flow
   - **Profile**: name (editable, syncs to `users.name`), bio (textarea, 160 char limit with counter)
   - **Socials**: add/remove social platform + URL pairs (up to 7 platforms)
   - **Theme picker**: 4 preset cards showing a color swatch, clicking selects it
   - **Links on page**: list of the user's links with a toggle for `showOnPage` (links to `/app/links` to create new ones)
-- Save button: `PATCH /api/user/page` — saves bio, socials, theme; returns updated profile
+- Save button: `PATCH /api/user/page` — saves bio, socials, theme, customAvatarUrl; returns updated profile
+
+### Avatar upload — Cloudflare Images flow
+
+1. Client picks a file → calls `POST /api/user/avatar-upload-url` (auth required)
+2. Server requests a one-time direct upload URL from Cloudflare Images API:
+   ```
+   POST https://api.cloudflare.com/client/v4/accounts/{CLOUDFLARE_ACCOUNT_ID}/images/v2/direct_upload
+   Authorization: Bearer {CLOUDFLARE_IMAGES_TOKEN}
+   ```
+   Returns `{ uploadURL, id }`.
+3. Server returns `{ uploadURL, imageId }` to the client (never expose the token to the client)
+4. Client POSTs the file directly to `uploadURL` (multipart/form-data) — upload goes straight to Cloudflare, not through the app server
+5. On success, client calls `PATCH /api/user/page` with `{ customAvatarUrl: \`https://imagedelivery.net/{CLOUDFLARE_IMAGES_HASH}/{imageId}/public\` }`
+6. Editor preview updates immediately via the live preview panel
+
+**`POST /api/user/avatar-upload-url`** (`server/api/user/avatar-upload-url.post.ts`):
+- Requires auth
+- Calls Cloudflare Images direct upload endpoint
+- Returns `{ uploadURL: string, imageId: string }`
+- Never forwards the Cloudflare token to the client
 
 **`PATCH /api/user/page`** (`server/api/user/page.patch.ts`):
 - Requires auth
-- Accepts `{ bio?, socials?, theme? }`
+- Accepts `{ bio?, socials?, theme?, customAvatarUrl? }` — `null` clears the custom avatar
 - Upserts `page_profiles` row for the user
+
+### New environment variables
+```
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_IMAGES_TOKEN=
+CLOUDFLARE_IMAGES_HASH=   # the hash in imagedelivery.net URLs, found in CF dashboard
+```
 
 ### Route for the public page
 - No server route needed. Nuxt handles `su1.ca/username` natively via `app/pages/[username].vue`. The only server route touching the `[username]` namespace is `server/routes/[username]/[slug].get.ts` (task 005), which sits one level deeper and does not conflict.
 
 ## Acceptance criteria
 - [ ] `su1.ca/username` renders the public page with avatar, bio, socials, and active links
+- [ ] Custom avatar takes precedence over OAuth avatar when set; OAuth avatar shown as fallback
 - [ ] Theme is applied correctly — at least default and one other theme visually distinct
 - [ ] `useSeoMeta` sets correct title and description
 - [ ] `/app/page` editor saves bio, socials, and theme to DB
+- [ ] Uploading an image completes the full Cloudflare Images flow; avatar updates in the preview
+- [ ] "Use account avatar" resets the custom avatar and shows the OAuth avatar in the preview
+- [ ] Cloudflare token is never sent to the client
 - [ ] Link `showOnPage` toggles in the editor update immediately
 - [ ] Live preview in the editor reflects current settings without a page reload
 - [ ] Public page is accessible without auth
