@@ -10,6 +10,6 @@
 | 006 | Personal page (public profile) | ✅ done | [spec](006-personal-page.md) |
 | 007 | Instagram automation | ✅ done | [spec](007-instagram-automation.md) |
 | 008 | Freemium and billing | ✅ done | [spec](008-freemium-and-billing.md) |
-| 009 | Zod validation refactor | 🔄 progress | [spec](009-zod-validation-refactor.md) |
+| 009 | Zod validation refactor | ✅ done | [spec](009-zod-validation-refactor.md) |
 
 <!-- Statuses: ⬜ todo | 🔄 progress | ✅ done | 🚫 blocked -->
