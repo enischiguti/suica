@@ -77,9 +77,14 @@ When asked to **"run tasks"**:
    - Create and check out branch `task/NNN-short-title` (e.g. `task/001-landing-page`)
    - Implement the spec, run `pnpm test && pnpm lint && pnpm typecheck`
    - Push the branch and open a PR titled `[Task NNN] Title` targeting `main`
-5. Once the implementation agent completes, spawn a **review agent** (Agent tool, `subagent_type: code-review`) pointing it at the PR number
-6. If the review passes: merge the PR, update task status to `✅ done`
-7. If the review surfaces blocking issues: leave the task as `🔄 progress`, add a note in the spec's Notes section, and fix before re-requesting review
+5. Once the implementation agent completes, spawn a **review agent** (Agent tool) pointing it at the PR number; instruct it to:
+   - Read the diff via `gh pr diff <number>`
+   - Post inline comments on specific lines using `gh api` (repos/{owner}/{repo}/pulls/{number}/comments) for each finding
+   - If blocking issues exist: `gh pr review <number> --request-changes --body "..."` summarising all findings
+   - If no blocking issues: `gh pr review <number> --approve --body "LGTM"` (or with minor notes)
+   - The review agent must NOT merge — it only reviews and posts its decision on GitHub
+6. If the review requests changes: fix the issues on the PR branch, push, then re-run the review agent on the same PR
+7. If the review approves: merge the PR (`gh pr merge <number> --squash --delete-branch`), update task status to `✅ done`
 8. If the task cannot proceed: set status to `🚫 blocked` with a note in the spec's Notes section
 9. Continue to the next `⬜ todo` task, or stop if the user said "work on task NNN" (single task)
 
