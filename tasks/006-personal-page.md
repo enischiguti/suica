@@ -66,7 +66,7 @@ Actually implement this as a Nuxt page:
 - Upserts `page_profiles` row for the user
 
 ### Route for the public page
-- Update `server/routes/[username].get.ts` (from task 005) to no longer return 404 — instead, let Nuxt's `app/pages/[username].vue` handle it (Nuxt routing takes over for non-`/api` and non-`/auth` paths)
+- No server route needed. Nuxt handles `su1.ca/username` natively via `app/pages/[username].vue`. The only server route touching the `[username]` namespace is `server/routes/[username]/[slug].get.ts` (task 005), which sits one level deeper and does not conflict.
 
 ## Acceptance criteria
 - [ ] `su1.ca/username` renders the public page with avatar, bio, socials, and active links

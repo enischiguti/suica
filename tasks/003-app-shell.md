@@ -11,9 +11,10 @@ Build the authenticated app shell: the `/app` home screen with feature entry car
   - Right: user avatar (`<UAvatar>`) + dropdown menu with "Account" (`/app/settings`) and "Log out"
 - Logout action: POST/GET to `/auth/logout` then redirect to `/`
 - Apply this layout to all `/app/**` pages via `definePageMeta({ layout: 'app' })`
+- All `/app/**` pages live under `app/pages/app/` (e.g. `app/pages/app/index.vue`, `app/pages/app/settings.vue`)
 
-### `/app` — Home screen
-- Two large feature cards side by side (stack on mobile):
+### `/app` — Home screen (`app/pages/app/index.vue`)
+- Three feature cards side by side (stack on mobile):
   - **My Page** — "Your personal link page at su1.ca/username" — icon: globe or link — links to `/app/page`
   - **My Links** — "Short links and analytics" — icon: chart-bar or arrow-up-right — links to `/app/links`
   - **Automations** — "Instagram DM automations" — icon: bolt or message — links to `/app/automations`

@@ -8,6 +8,7 @@ Implement OAuth login (Google + Instagram via Meta) using `nuxt-auth-utils`, per
 ### DB schema changes
 - Add `useCase` column to the `users` table: `text('use_case')` (nullable — null means onboarding not completed)
   - Accepted values: `'personal-page'` | `'instagram-automation'`
+- Add `username` column to the `users` table: `text('username').unique()` (nullable until onboarding completes)
 - Run `pnpm db:push` to apply (dev only)
 
 ### OAuth providers
@@ -28,26 +29,22 @@ Implement OAuth login (Google + Instagram via Meta) using `nuxt-auth-utils`, per
 - Redirect to `/app` if already authenticated (check `useUserSession()`)
 
 ### `/onboarding` page (`app/pages/onboarding.vue`)
-- Protected: redirect to `/login` if not authenticated
-- Redirect to `/app` if `useCase` is already set
-- Two large selectable cards side by side:
-  - **Personal page** — "Create your link page at su1.ca/username" — icon: link/globe
-  - **Instagram automation** — "Auto-send DMs when someone comments on your post" — icon: message/bolt
-- On selection: POST to `server/api/onboarding.post.ts` which saves `useCase` to the user's DB row, then redirect to `/app`
-- `server/api/onboarding.post.ts`: requires auth session, validates `useCase` value, updates DB via `useDB()`
-
-### `/app` page (`app/pages/app.vue`)
-- Protected: redirect to `/login` if not authenticated
-- Shows user profile card:
-  - Avatar (from OAuth, use `<UAvatar>`)
-  - Display name and email
-  - Badge showing selected use case
-- "Log out" button: calls `$fetch('/auth/logout')` then redirects to `/`
-- `server/routes/auth/logout.get.ts`: clears the session and redirects to `/`
+- Two-step flow (single page, step state managed locally):
+  - **Step 1 — Username**: text input for their public handle (`/^[a-z0-9_-]{3,32}$/`). Show live preview of their URL: `su1.ca/{username}`. Validate uniqueness via `GET /api/user/check-username?username=` before advancing.
+  - **Step 2 — Use case**: two large selectable cards:
+    - **Personal page** — "Create your link page at su1.ca/username" — icon: link/globe
+    - **Instagram automation** — "Auto-send DMs when someone comments on your post" — icon: message/bolt
+- Protected: redirect to `/login` if not authenticated; redirect to `/app` if both `username` and `useCase` are already set
+- On completion: POST to `server/api/onboarding.post.ts` with `{ username, useCase }`, then redirect to `/app`
+- `server/api/onboarding.post.ts`: requires auth, validates both fields, updates DB via `useDB()`
+- `GET /api/user/check-username`: requires auth, returns `{ available: boolean }`
 
 ### Route middleware
 - Create `app/middleware/auth.ts`: redirect to `/login` if no active session
-- Apply to `/app` and `/onboarding` via `definePageMeta({ middleware: 'auth' })`
+- Apply to `/app/**` and `/onboarding` via `definePageMeta({ middleware: 'auth' })`
+
+### Logout route
+- `server/routes/auth/logout.get.ts`: clears the session via `clearUserSession(event)` and redirects to `/`
 
 ### Environment variables needed (`.env`)
 ```
@@ -65,11 +62,11 @@ Update `.env.example` accordingly (replace the GitHub vars).
 - [ ] `/login` renders with Google and Instagram buttons; redirects to `/app` if already logged in
 - [ ] Google OAuth flow completes: user created in DB, session set, redirected correctly
 - [ ] Facebook/Instagram OAuth flow completes: same as above
-- [ ] First-time user lands on `/onboarding`, returning user skips it
-- [ ] Use case selection saves to DB and redirects to `/app`
-- [ ] `/app` shows avatar, name, email, use case badge, and logout button
+- [ ] First-time user lands on `/onboarding`, returning user (username + useCase set) is redirected to `/app`
+- [ ] Onboarding step 1 validates username format and uniqueness before advancing
+- [ ] Onboarding step 2 saves username + useCase to DB and redirects to `/app`
 - [ ] Logout clears session and redirects to `/`
-- [ ] `/app` and `/onboarding` redirect unauthenticated users to `/login`
+- [ ] `/app/**` and `/onboarding` redirect unauthenticated users to `/login`
 - [ ] `.env.example` updated with Facebook vars, GitHub vars removed
 - [ ] `pnpm lint` and `pnpm typecheck` pass
 

@@ -40,17 +40,19 @@ updatedAt     timestamp  defaultNow()
 ```
 id            text  PK
 automationId  text  FK → automations.id
-igCommentId   text  not null  (dedup: don't send twice for same comment)
+igCommentId   text  not null  (dedup key — indexed)
 commenterUsername text
-status        text  ('sent' | 'failed' | 'skipped')
+status        text  ('sent' | 'failed')
 error         text  nullable
 triggeredAt   timestamp  defaultNow()
 ```
+Note: dedup is handled by querying `automation_logs` for the `igCommentId` before processing — no 'skipped' status needed since skipped comments produce no log row.
 
 ### Instagram account connection (`/app/automations/connect`)
-- Button "Connect Instagram account" → redirects to `server/routes/auth/instagram.get.ts`
+- Button "Connect Instagram account" → redirects to `server/routes/instagram/connect.get.ts`
+- Note: this is NOT a nuxt-auth-utils OAuth handler — it is a manual OAuth flow against Meta's API, kept under `/instagram/` to avoid clashing with `/auth/` routes used for login
 - OAuth handler requests scopes: `instagram_basic`, `instagram_manage_messages`, `pages_show_list`, `pages_messaging`
-- On callback (`server/routes/auth/instagram-callback.get.ts`):
+- On callback (`server/routes/instagram/callback.get.ts`):
   - Exchange code for short-lived token, then exchange for long-lived token (60-day)
   - Fetch Instagram user ID and username from Graph API
   - Upsert `instagram_accounts` row (encrypt `accessToken` with `ENCRYPTION_KEY` env var via Node `crypto.createCipheriv`)
