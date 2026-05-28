@@ -1,4 +1,7 @@
 export * from '~~/server/db/schema/accounts'
+export * from '~~/server/db/schema/automation-logs'
+export * from '~~/server/db/schema/automations'
+export * from '~~/server/db/schema/instagram-accounts'
 export * from '~~/server/db/schema/link-clicks'
 export * from '~~/server/db/schema/links'
 export * from '~~/server/db/schema/page-profiles'
