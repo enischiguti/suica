@@ -1,7 +1,7 @@
 # 002 — Auth and onboarding
 
 ## Goal
-Implement OAuth login (Google + Instagram via Meta) using `nuxt-auth-utils`, persist users in the database, and guide first-time users through a use-case selection onboarding step before landing on their dashboard.
+Implement OAuth login (Google + Instagram via Meta) using `nuxt-auth-utils`, persist users in the database, and guide first-time users through a use-case selection onboarding step before landing on the app.
 
 ## Specs
 
@@ -18,25 +18,25 @@ Implement OAuth login (Google + Instagram via Meta) using `nuxt-auth-utils`, per
   1. Upsert the user in the DB (`users` table) on `provider` + `providerId`
   2. Set the session via `setUserSession(event, { user: { id, email, name, avatarUrl } })`
   3. If the user has no `useCase` (first login), redirect to `/onboarding`
-  4. If the user has a `useCase` (returning), redirect to `/dashboard`
+  4. If the user has a `useCase` (returning), redirect to `/app`
 
 ### `/login` page (`app/pages/login.vue`)
 - Clean centered card using Nuxt UI components
 - "Continue with Google" button (Google colors / icon)
 - "Continue with Instagram" button (Instagram gradient or brand color)
 - Each button triggers its respective OAuth redirect (`/auth/google`, `/auth/facebook`)
-- Redirect to `/dashboard` if already authenticated (check `useUserSession()`)
+- Redirect to `/app` if already authenticated (check `useUserSession()`)
 
 ### `/onboarding` page (`app/pages/onboarding.vue`)
 - Protected: redirect to `/login` if not authenticated
-- Redirect to `/dashboard` if `useCase` is already set
+- Redirect to `/app` if `useCase` is already set
 - Two large selectable cards side by side:
   - **Personal page** — "Create your link page at su1.ca/username" — icon: link/globe
   - **Instagram automation** — "Auto-send DMs when someone comments on your post" — icon: message/bolt
-- On selection: POST to `server/api/onboarding.post.ts` which saves `useCase` to the user's DB row, then redirect to `/dashboard`
+- On selection: POST to `server/api/onboarding.post.ts` which saves `useCase` to the user's DB row, then redirect to `/app`
 - `server/api/onboarding.post.ts`: requires auth session, validates `useCase` value, updates DB via `useDB()`
 
-### `/dashboard` page (`app/pages/dashboard.vue`)
+### `/app` page (`app/pages/app.vue`)
 - Protected: redirect to `/login` if not authenticated
 - Shows user profile card:
   - Avatar (from OAuth, use `<UAvatar>`)
@@ -47,7 +47,7 @@ Implement OAuth login (Google + Instagram via Meta) using `nuxt-auth-utils`, per
 
 ### Route middleware
 - Create `app/middleware/auth.ts`: redirect to `/login` if no active session
-- Apply to `/dashboard` and `/onboarding` via `definePageMeta({ middleware: 'auth' })`
+- Apply to `/app` and `/onboarding` via `definePageMeta({ middleware: 'auth' })`
 
 ### Environment variables needed (`.env`)
 ```
@@ -62,14 +62,14 @@ Update `.env.example` accordingly (replace the GitHub vars).
 - Update `runtimeConfig.oauth` to replace `github` block with `facebook`
 
 ## Acceptance criteria
-- [ ] `/login` renders with Google and Instagram buttons; redirects to `/dashboard` if already logged in
+- [ ] `/login` renders with Google and Instagram buttons; redirects to `/app` if already logged in
 - [ ] Google OAuth flow completes: user created in DB, session set, redirected correctly
 - [ ] Facebook/Instagram OAuth flow completes: same as above
 - [ ] First-time user lands on `/onboarding`, returning user skips it
-- [ ] Use case selection saves to DB and redirects to `/dashboard`
-- [ ] `/dashboard` shows avatar, name, email, use case badge, and logout button
+- [ ] Use case selection saves to DB and redirects to `/app`
+- [ ] `/app` shows avatar, name, email, use case badge, and logout button
 - [ ] Logout clears session and redirects to `/`
-- [ ] `/dashboard` and `/onboarding` redirect unauthenticated users to `/login`
+- [ ] `/app` and `/onboarding` redirect unauthenticated users to `/login`
 - [ ] `.env.example` updated with Facebook vars, GitHub vars removed
 - [ ] `pnpm lint` and `pnpm typecheck` pass
 
