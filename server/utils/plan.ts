@@ -2,21 +2,7 @@ import { count, eq } from 'drizzle-orm'
 import { useDB } from '~~/server/db/index'
 import { automations, links, users } from '~~/server/db/schema'
 import { getDailyDmCount } from '~~/server/utils/dm-cap'
-
-const PLANS = {
-  free: {
-    limits: {
-      links: 10,
-      automations: 1,
-    },
-  },
-  pro: {
-    limits: {
-      links: 1000,
-      automations: 20,
-    },
-  },
-}
+import { PLANS } from '~~/shared/plans'
 
 export async function getUserPlan(userId: string): Promise<'free' | 'pro'> {
   const db = useDB()

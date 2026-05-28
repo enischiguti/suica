@@ -82,6 +82,7 @@ export default defineEventHandler(async (event) => {
       .set({
         subscriptionStatus: 'canceled',
         stripePriceId: null,
+        stripeSubscriptionId: null,
       })
       .where(eq(users.stripeCustomerId, customerId))
   }

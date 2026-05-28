@@ -21,8 +21,12 @@ vi.mock('~~/server/utils/slug', () => ({
   generateUniqueSlug: vi.fn(async (title: string) => title.toLowerCase().replace(/\s+/g, '-')),
 }))
 
+const mockCanAddLink = vi.fn(async () => true)
+const mockGetUserPlan = vi.fn(async () => 'free')
+
 vi.mock('~~/server/utils/plan', () => ({
-  canAddLink: vi.fn(async () => true),
+  canAddLink: mockCanAddLink,
+  getUserPlan: mockGetUserPlan,
 }))
 
 vi.mock('drizzle-orm', async (importOriginal) => {
@@ -48,6 +52,31 @@ function setupInsertReturns(row: unknown) {
 describe('applyCreateLink', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  it('throws 403 with LIMIT_REACHED when free plan link limit is hit', async () => {
+    mockCanAddLink.mockResolvedValueOnce(false)
+    mockGetUserPlan.mockResolvedValueOnce('free')
+    // Count query ends at .where() — use isolated mocks so once-values don't leak to other tests
+    const countWhere = vi.fn().mockResolvedValueOnce([{ count: 10 }])
+    const countFrom = vi.fn().mockReturnValueOnce({ where: countWhere })
+    mockSelect.mockReturnValueOnce({ from: countFrom })
+
+    await expect(
+      applyCreateLink('user-1', { title: 'My Link', destinationUrl: 'https://example.com' }),
+    ).rejects.toMatchObject({ statusCode: 403, data: { code: 'LIMIT_REACHED', limit: 10, current: 10 } })
+  })
+
+  it('throws 403 with correct pro limit when pro plan limit is hit', async () => {
+    mockCanAddLink.mockResolvedValueOnce(false)
+    mockGetUserPlan.mockResolvedValueOnce('pro')
+    const countWhere = vi.fn().mockResolvedValueOnce([{ count: 1000 }])
+    const countFrom = vi.fn().mockReturnValueOnce({ where: countWhere })
+    mockSelect.mockReturnValueOnce({ from: countFrom })
+
+    await expect(
+      applyCreateLink('user-1', { title: 'My Link', destinationUrl: 'https://example.com' }),
+    ).rejects.toMatchObject({ statusCode: 403, data: { code: 'LIMIT_REACHED', limit: 1000, current: 1000 } })
   })
 
   it('throws 400 when title is missing', async () => {

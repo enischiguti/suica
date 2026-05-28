@@ -5,9 +5,7 @@ import { automations, links, users } from '~~/server/db/schema'
 import { getDailyDmsCount, getUserPlan } from '~~/server/utils/plan'
 import { requireSession } from '~~/server/utils/session'
 
-export default defineEventHandler(async (event) => {
-  const session = await requireSession(event)
-  const userId = session.user.id
+export async function applyGetBilling(userId: string) {
   const db = useDB()
 
   const [plan, linksResult, automationsResult, dmsToday] = await Promise.all([
@@ -66,4 +64,9 @@ export default defineEventHandler(async (event) => {
     },
     subscription,
   }
+}
+
+export default defineEventHandler(async (event) => {
+  const session = await requireSession(event)
+  return applyGetBilling(session.user.id)
 })

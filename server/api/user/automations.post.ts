@@ -3,8 +3,9 @@ import { createError, defineEventHandler, readValidatedBody } from 'h3'
 import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { automations, instagramAccounts } from '~~/server/db/schema'
-import { canAddAutomation } from '~~/server/utils/plan'
+import { canAddAutomation, getUserPlan } from '~~/server/utils/plan'
 import { requireSession } from '~~/server/utils/session'
+import { PLANS } from '~~/shared/plans'
 
 const createAutomationSchema = z.object({
   name: z.string().min(1),
@@ -23,11 +24,13 @@ export async function applyCreateAutomation(userId: string, body: CreateAutomati
   // Plan enforcement
   const allowed = await canAddAutomation(userId)
   if (!allowed) {
+    const plan = await getUserPlan(userId)
+    const limit = PLANS[plan].limits.automations
     const countResult = await db.select({ count: count() }).from(automations).where(eq(automations.userId, userId))
     const current = countResult[0]?.count ?? 0
     throw createError({
       statusCode: 403,
-      data: { code: 'LIMIT_REACHED', limit: 1, current },
+      data: { code: 'LIMIT_REACHED', limit, current },
     })
   }
 
