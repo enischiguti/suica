@@ -1,9 +1,15 @@
 import { and, eq } from 'drizzle-orm'
-import { createError, defineEventHandler, getRequestHeader, getRequestIP, sendRedirect } from 'h3'
+import { createError, defineEventHandler, getRequestHeader, getRequestIP, getValidatedRouterParams, sendRedirect } from 'h3'
+import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { linkClicks, links, users } from '~~/server/db/schema'
 import { recordVisit } from '~~/server/utils/analytics'
 import { detectDevice } from '~~/server/utils/device'
+
+const slugRouteParamsSchema = z.object({
+  username: z.string(),
+  slug: z.string(),
+})
 
 export interface ClickContext {
   ip: string
@@ -58,8 +64,7 @@ export async function applyRedirect(
 }
 
 export default defineEventHandler(async (event) => {
-  const username = event.context.params?.username ?? ''
-  const slug = event.context.params?.slug ?? ''
+  const { username, slug } = await getValidatedRouterParams(event, slugRouteParamsSchema.parse)
 
   const clickContext: ClickContext = {
     ip: getRequestIP(event, { xForwardedFor: true }) ?? '',

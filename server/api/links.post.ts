@@ -12,7 +12,7 @@ import { PLANS } from '~~/shared/plans'
 const createLinkSchema = z.object({
   title: z.string().min(1),
   destinationUrl: z.string().min(1),
-  slug: z.string().optional(),
+  slug: z.string().regex(/^[a-z0-9-]+$/).min(1).max(64).optional(),
   showOnPage: z.boolean().optional(),
 })
 

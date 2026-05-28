@@ -1,32 +1,23 @@
 import { eq } from 'drizzle-orm'
-import { createError, defineEventHandler, readBody } from 'h3'
+import { createError, defineEventHandler, readValidatedBody } from 'h3'
+import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { users } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
-import { isReservedUsername, isValidUsernameFormat } from '~/utils/username'
+import { isReservedUsername } from '~/utils/username'
 
-type UseCase = 'personal-page' | 'instagram-automation'
-
-function isValidUseCase(value: unknown): value is UseCase {
-  return value === 'personal-page' || value === 'instagram-automation'
-}
+const onboardingSchema = z.object({
+  username: z.string().min(3).max(32).regex(/^[a-z0-9_-]+$/),
+  useCase: z.enum(['personal-page', 'instagram-automation']),
+})
 
 export default defineEventHandler(async (event) => {
   const session = await requireSession(event)
 
-  const body = await readBody(event)
-  const { username, useCase } = body ?? {}
-
-  if (typeof username !== 'string' || !isValidUsernameFormat(username)) {
-    throw createError({ statusCode: 400, message: 'Invalid username format' })
-  }
+  const { username, useCase } = await readValidatedBody(event, onboardingSchema.parse)
 
   if (isReservedUsername(username)) {
     throw createError({ statusCode: 400, message: 'Username not available' })
-  }
-
-  if (!isValidUseCase(useCase)) {
-    throw createError({ statusCode: 400, message: 'Invalid use case' })
   }
 
   // Race condition guard: check if username is taken
