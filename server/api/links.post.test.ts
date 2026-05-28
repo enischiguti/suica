@@ -1,8 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock dependencies
+// Module-level mock functions — no type assertions needed
+const mockSelect = vi.fn()
+const mockFrom = vi.fn()
+const mockWhere = vi.fn()
+const mockLimit = vi.fn()
+const mockInsert = vi.fn()
+const mockValues = vi.fn()
+const mockReturning = vi.fn()
+
 vi.mock('~~/server/db/index', () => ({
-  useDB: vi.fn(),
+  useDB: vi.fn(() => ({
+    select: mockSelect,
+    insert: mockInsert,
+  })),
 }))
 
 vi.mock('~~/server/utils/slug', () => ({
@@ -15,46 +26,19 @@ vi.mock('drizzle-orm', async (importOriginal) => {
   return { ...actual, eq: vi.fn(() => 'eq-result'), and: vi.fn(() => 'and-result') }
 })
 
-vi.mock('h3', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('h3')>()
-  return { ...actual }
-})
-
-const { useDB } = await import('~~/server/db/index')
-const mockUseDB = vi.mocked(useDB)
 const { applyCreateLink } = await import('./links.post')
 
-function makeDbMock(options: {
-  existingSlug?: boolean
-  createdLink?: Record<string, unknown>
-  hasSlugCheck?: boolean
-}) {
-  const { existingSlug = false, createdLink, hasSlugCheck = false } = options
+function setupSelectReturns(rows: unknown[]) {
+  mockLimit.mockResolvedValue(rows)
+  mockWhere.mockReturnValue({ limit: mockLimit })
+  mockFrom.mockReturnValue({ where: mockWhere })
+  mockSelect.mockReturnValue({ from: mockFrom })
+}
 
-  const mockLimit = vi.fn()
-  const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit })
-  const mockFrom = vi.fn().mockReturnValue({ where: mockWhere })
-  const mockSelect = vi.fn().mockReturnValue({ from: mockFrom })
-
-  const mockReturning = vi.fn().mockResolvedValue(undefined)
-  const mockInsertValues = vi.fn().mockReturnValue({ returning: mockReturning })
-  const mockInsert = vi.fn().mockReturnValue({ values: mockInsertValues })
-
-  let callCount = 0
-  mockLimit.mockImplementation(() => {
-    callCount++
-    if (hasSlugCheck && callCount === 1) {
-      // Slug uniqueness check
-      return Promise.resolve(existingSlug ? [{ id: 'existing' }] : [])
-    }
-    // Fetch after insert
-    return Promise.resolve(createdLink ? [createdLink] : [])
-  })
-
-  return {
-    select: mockSelect,
-    insert: mockInsert,
-  }
+function setupInsertReturns(row: unknown) {
+  mockReturning.mockResolvedValue(row ? [row] : [])
+  mockValues.mockReturnValue({ returning: mockReturning })
+  mockInsert.mockReturnValue({ values: mockValues })
 }
 
 describe('applyCreateLink', () => {
@@ -63,40 +47,31 @@ describe('applyCreateLink', () => {
   })
 
   it('throws 400 when title is missing', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock({}) as unknown as ReturnType<typeof useDB>)
     await expect(
       applyCreateLink('user-1', { title: '', destinationUrl: 'https://example.com' }),
     ).rejects.toMatchObject({ statusCode: 400 })
   })
 
   it('throws 400 when title is not a string', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock({}) as unknown as ReturnType<typeof useDB>)
     await expect(
       applyCreateLink('user-1', { title: 123, destinationUrl: 'https://example.com' }),
     ).rejects.toMatchObject({ statusCode: 400 })
   })
 
   it('throws 400 when destinationUrl is not a valid URL', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock({}) as unknown as ReturnType<typeof useDB>)
     await expect(
       applyCreateLink('user-1', { title: 'My Link', destinationUrl: 'not-a-url' }),
     ).rejects.toMatchObject({ statusCode: 400 })
   })
 
   it('throws 400 when destinationUrl is missing protocol', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock({}) as unknown as ReturnType<typeof useDB>)
     await expect(
       applyCreateLink('user-1', { title: 'My Link', destinationUrl: 'example.com' }),
     ).rejects.toMatchObject({ statusCode: 400 })
   })
 
   it('throws 409 when custom slug is already taken', async () => {
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock({ existingSlug: true, hasSlugCheck: true }) as unknown as ReturnType<typeof useDB>)
+    setupSelectReturns([{ id: 'existing' }])
     await expect(
       applyCreateLink('user-1', { title: 'My Link', destinationUrl: 'https://example.com', slug: 'my-slug' }),
     ).rejects.toMatchObject({ statusCode: 409 })
@@ -114,8 +89,7 @@ describe('applyCreateLink', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     }
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock({ createdLink }) as unknown as ReturnType<typeof useDB>)
+    setupInsertReturns(createdLink)
 
     const result = await applyCreateLink('user-1', {
       title: 'My Link',
@@ -136,8 +110,8 @@ describe('applyCreateLink', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     }
-    // eslint-disable-next-line ts/consistent-type-assertions
-    mockUseDB.mockReturnValue(makeDbMock({ createdLink, hasSlugCheck: true }) as unknown as ReturnType<typeof useDB>)
+    setupSelectReturns([]) // slug not taken
+    setupInsertReturns(createdLink)
 
     const result = await applyCreateLink('user-1', {
       title: 'My Link',

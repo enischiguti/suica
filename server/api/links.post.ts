@@ -1,4 +1,5 @@
 import { and, eq } from 'drizzle-orm'
+
 import { createError, defineEventHandler, readBody } from 'h3'
 import { useDB } from '~~/server/db/index'
 import { links } from '~~/server/db/schema'
@@ -59,7 +60,7 @@ export async function applyCreateLink(userId: string, body: CreateLinkBody) {
   const id = crypto.randomUUID()
   const now = new Date()
 
-  await db.insert(links).values({
+  const created = await db.insert(links).values({
     id,
     userId,
     title: title.trim(),
@@ -69,15 +70,14 @@ export async function applyCreateLink(userId: string, body: CreateLinkBody) {
     isActive: true,
     createdAt: now,
     updatedAt: now,
-  })
+  }).returning()
 
-  const created = await db.select().from(links).where(eq(links.id, id)).limit(1)
-
-  if (created.length === 0) {
+  const link = created[0]
+  if (!link) {
     throw createError({ statusCode: 500, message: 'Failed to create link' })
   }
 
-  return created[0]
+  return link
 }
 
 export default defineEventHandler(async (event) => {

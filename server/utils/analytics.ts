@@ -9,7 +9,7 @@ export interface RecordVisitOptions {
 }
 
 export async function recordVisit(options: RecordVisitOptions): Promise<void> {
-  const { key, ip, insert, ttlSeconds = 3600 } = options
+  const { key, ip, insert, ttlSeconds = 86_400 } = options
 
   const salt = useRuntimeConfig().analyticsSecret
   const date = new Date().toISOString().slice(0, 10) // e.g. "2025-01-15"

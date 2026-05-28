@@ -45,7 +45,7 @@ describe('recordVisit', () => {
       expect.stringMatching(/^dedup:my-link:[a-f0-9]{64}$/),
       '1',
       'EX',
-      3600,
+      86_400,
       'NX',
     )
   })
