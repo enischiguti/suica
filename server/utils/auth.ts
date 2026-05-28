@@ -2,13 +2,17 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { emailOTP } from 'better-auth/plugins'
 import { useDB } from '~~/server/db/index'
+import { accounts, sessions, users, verifications } from '~~/server/db/schema'
 
 function createAuth() {
   return betterAuth({
     secret: useRuntimeConfig().betterAuthSecret,
     baseURL: useRuntimeConfig().betterAuthUrl,
     basePath: '/auth',
-    database: drizzleAdapter(useDB(), { provider: 'pg' }),
+    database: drizzleAdapter(useDB(), {
+      provider: 'pg',
+      schema: { user: users, session: sessions, account: accounts, verification: verifications },
+    }),
     emailAndPassword: { enabled: false },
     plugins: [
       emailOTP({
