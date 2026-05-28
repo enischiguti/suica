@@ -207,7 +207,8 @@ Update `.env.example` accordingly (replace GitHub and nuxt-auth-utils vars).
 - [ ] Logout clears session and redirects to `/`
 - [ ] `/app/**` and `/onboarding` redirect unauthenticated users to `/login`
 - [ ] `.env.example` updated; nuxt-auth-utils vars removed
-- [ ] `pnpm lint` and `pnpm typecheck` pass
+- [ ] Tests written: `requireSession` helper, `check-username` API (format, reserved list, uniqueness), `onboarding.post` API (validation, DB update), username regex utility
+- [ ] `pnpm test`, `pnpm lint`, and `pnpm typecheck` pass
 
 ## Notes
 <!-- Agent scratchpad -->

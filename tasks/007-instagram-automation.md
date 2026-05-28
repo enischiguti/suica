@@ -128,7 +128,8 @@ ENCRYPTION_KEY=   # 32-byte hex string for AES-256 token encryption
 - [ ] Jobs older than 23h55m are logged as `dropped` and not sent
 - [ ] Pro users: no app-level daily cap applied
 - [ ] Access tokens are encrypted at rest
-- [ ] `pnpm lint` and `pnpm typecheck` pass
+- [ ] Tests written: webhook signature verification (valid, tampered, missing), `process-comment` worker (staleness drop, dedup skip, keyword matching, priority order, first-match-only, DM cap enforcement for free users, cap bypass for pro users), token encryption/decryption round-trip
+- [ ] `pnpm test`, `pnpm lint`, and `pnpm typecheck` pass
 
 ## Notes
 <!-- Agent scratchpad -->

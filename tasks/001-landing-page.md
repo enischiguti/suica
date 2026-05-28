@@ -77,7 +77,8 @@ Add "See pricing" as a tertiary link in the hero alongside the two existing CTAs
 - [ ] Pricing section renders Free and Pro cards with correct limits and CTAs
 - [ ] Nav has a "Pricing" link scrolling to `#pricing`
 - [ ] Footer copyright year is dynamic
-- [ ] `pnpm lint` and `pnpm typecheck` pass
+- [ ] Tests written for the reserved username list utility (if extracted) and any composables with logic
+- [ ] `pnpm test`, `pnpm lint`, and `pnpm typecheck` pass
 
 ## Notes
 <!-- Agent scratchpad -->

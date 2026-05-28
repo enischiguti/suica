@@ -43,7 +43,8 @@ Handle incoming requests to `su1.ca/username/slug`: look up the link, record the
 - [ ] `su1.ca/nonexistent-user/anything` returns 404
 - [ ] Inactive links (isActive = false) return 404, not redirect
 - [ ] `username` column (from task 002) is used to look up the user correctly
-- [ ] `pnpm lint` and `pnpm typecheck` pass
+- [ ] Tests written: redirect route (valid slug → 302, invalid slug → 404, inactive link → 404, unknown user → 404), device detection logic from User-Agent
+- [ ] `pnpm test`, `pnpm lint`, and `pnpm typecheck` pass
 
 ## Notes
 <!-- Agent scratchpad -->

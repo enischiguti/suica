@@ -41,7 +41,8 @@ Build the authenticated app shell: the `/app` home screen with feature entry car
 - [ ] `/app/settings` lets users update their display name (persists to DB)
 - [ ] Navigating to any `/app/**` route while logged out redirects to `/login`
 - [ ] Layout is responsive (nav and cards stack correctly on mobile)
-- [ ] `pnpm lint` and `pnpm typecheck` pass
+- [ ] Tests written: `settings.patch` API (auth required, name validation, DB update)
+- [ ] `pnpm test`, `pnpm lint`, and `pnpm typecheck` pass
 
 ## Notes
 <!-- Agent scratchpad -->

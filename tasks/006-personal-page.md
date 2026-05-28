@@ -146,7 +146,8 @@ CLOUDFLARE_IMAGES_HASH=   # the hash in imagedelivery.net URLs, found in CF dash
 - [ ] Raw IPs are never written to the database
 - [ ] Page stats section in the editor shows total visits, referrers, devices, countries
 - [ ] Public page is accessible without auth
-- [ ] `pnpm lint` and `pnpm typecheck` pass
+- [ ] Tests written: `GET /api/public/[username]` (found, not found, avatar resolution logic), `POST /api/public/[username]/visit` (dedup, unknown user → 404), `PATCH /api/user/page` (auth required, upsert), `GET /api/user/page/stats` (auth required, free vs pro breakdown), `POST /api/user/avatar-upload-url` (auth required, token never in response)
+- [ ] `pnpm test`, `pnpm lint`, and `pnpm typecheck` pass
 
 ## Notes
 <!-- Agent scratchpad -->

@@ -127,7 +127,8 @@ Apply `isAnalyticsBreakdownAllowed` in:
 - [ ] Free nav badge appears for free users; clicking it opens the upgrade modal
 - [ ] Contextual upgrade modal appears when a limit is hit
 - [ ] 80% usage triggers an amber warning banner on the relevant page
-- [ ] `pnpm lint` and `pnpm typecheck` pass
+- [ ] Tests written: `getUserPlan` (active/trialing → pro, else → free), `canAddLink` / `canAddAutomation` (at limit, below limit, pro override), `isAnalyticsBreakdownAllowed`, Stripe webhook handler (all four events → correct DB state transitions)
+- [ ] `pnpm test`, `pnpm lint`, and `pnpm typecheck` pass
 
 ## Notes
 <!-- Agent scratchpad -->

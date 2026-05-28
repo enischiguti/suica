@@ -6,7 +6,7 @@
 |-------|--------|
 | Framework | Nuxt 4 (app/ directory) |
 | UI | Nuxt UI v3 (Tailwind v4) |
-| Auth | nuxt-auth-utils — OAuth via Google + GitHub |
+| Auth | better-auth — OAuth (Google, Facebook) + Email OTP |
 | Database | PostgreSQL + Drizzle ORM |
 | Payments | Stripe subscriptions |
 | Email | Mailgun (`mailgun.js`) |
@@ -21,6 +21,21 @@
 - **Linting**: `@antfu/eslint-config` — run `pnpm lint:fix` to auto-fix style issues
 - **Server singletons**: DB, Redis, Stripe, and Mailgun clients are lazy singletons (`useDB()`, `useRedis()`, `useStripe()`) initialized inside functions so `useRuntimeConfig()` has context
 - **Pre-commit hook**: `pnpm lint && pnpm typecheck` runs automatically via `simple-git-hooks`
+
+## Frontend guidelines
+
+- **Responsive**: every page and component must work on mobile, tablet, and desktop
+- **Nuxt UI first**: use Nuxt UI v3 components (`UButton`, `UCard`, `UInput`, `UModal`, `UTable`, etc.) for all UI — do not reach for raw HTML elements or third-party component libraries when a Nuxt UI equivalent exists
+- **App-level customization**: theme tokens, default props, and component variants go in `app/app.config.ts` (`ui` key) — override at the component level only when a one-off is truly needed
+
+## Testing
+
+- **Framework**: Vitest + `@nuxt/test-utils` for unit and integration tests; test files live alongside source in `*.test.ts` files
+- **Tests are required**: writing tests is an acceptance criterion for every task — a task is not done until `pnpm test` passes
+- **What to test**:
+  - *Server*: every API route (happy path + key error cases), utility functions with non-trivial logic (slug generation, analytics dedup, plan enforcement, webhook signature verification)
+  - *Client*: composables and utilities with logic; page-level tests for critical flows (form validation, auth redirects) using `@nuxt/test-utils` mount helpers
+  - *Workers*: BullMQ job handlers tested in isolation with mocked DB and external API calls
 
 ## Key files
 

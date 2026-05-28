@@ -105,7 +105,8 @@ Implementation:
 - [ ] A second redirect from the same IP within 1 hour is not recorded as a new click
 - [ ] Raw IPs are never written to the database
 - [ ] All API routes validate auth and ownership
-- [ ] `pnpm lint` and `pnpm typecheck` pass
+- [ ] Tests written: slug generation (auto, collision, custom validation), `recordVisit` dedup logic (first visit recorded, duplicate within TTL skipped, IP never stored), all four API routes (happy path + ownership rejection + limit errors)
+- [ ] `pnpm test`, `pnpm lint`, and `pnpm typecheck` pass
 
 ## Notes
 <!-- Agent scratchpad -->
