@@ -1,8 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import { createError, defineEventHandler, getRequestHeader, getRequestIP, sendRedirect } from 'h3'
 import { useDB } from '~~/server/db/index'
-import { linkClicks, links } from '~~/server/db/schema'
-import { users } from '~~/server/db/schema/users'
+import { linkClicks, links, users } from '~~/server/db/schema'
 import { recordVisit } from '~~/server/utils/analytics'
 import { detectDevice } from '~~/server/utils/device'
 
