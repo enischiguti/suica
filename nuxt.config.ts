@@ -3,7 +3,6 @@ import process from 'node:process'
 export default defineNuxtConfig({
   modules: [
     '@nuxt/ui',
-    'nuxt-auth-utils',
   ],
 
   devtools: {
@@ -25,17 +24,16 @@ export default defineNuxtConfig({
     stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',
     mailgunApiKey: process.env.MAILGUN_API_KEY ?? '',
     mailgunDomain: process.env.MAILGUN_DOMAIN ?? '',
-    session: {
-      password: process.env.NUXT_SESSION_PASSWORD ?? '',
-    },
+    betterAuthSecret: process.env.BETTER_AUTH_SECRET ?? '',
+    betterAuthUrl: process.env.BETTER_AUTH_URL ?? 'http://localhost:3000',
     oauth: {
       google: {
         clientId: process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID ?? '',
         clientSecret: process.env.NUXT_OAUTH_GOOGLE_CLIENT_SECRET ?? '',
       },
-      github: {
-        clientId: process.env.NUXT_OAUTH_GITHUB_CLIENT_ID ?? '',
-        clientSecret: process.env.NUXT_OAUTH_GITHUB_CLIENT_SECRET ?? '',
+      facebook: {
+        clientId: process.env.NUXT_OAUTH_FACEBOOK_CLIENT_ID ?? '',
+        clientSecret: process.env.NUXT_OAUTH_FACEBOOK_CLIENT_SECRET ?? '',
       },
     },
   },
