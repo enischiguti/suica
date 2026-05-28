@@ -9,5 +9,6 @@
 | 005 | Short link redirects and click recording | ⬜ todo | [spec](005-short-link-redirects.md) |
 | 006 | Personal page (public profile) | ⬜ todo | [spec](006-personal-page.md) |
 | 007 | Instagram automation | ⬜ todo | [spec](007-instagram-automation.md) |
+| 008 | Freemium and billing | ⬜ todo | [spec](008-freemium-and-billing.md) |
 
 <!-- Statuses: ⬜ todo | 🔄 progress | ✅ done | 🚫 blocked -->

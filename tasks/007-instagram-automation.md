@@ -46,7 +46,7 @@ status        text  ('sent' | 'failed')
 error         text  nullable
 triggeredAt   timestamp  defaultNow()
 ```
-Note: dedup is handled by querying `automation_logs` for the `igCommentId` before processing — no 'skipped' status needed since skipped comments produce no log row.
+Statuses: `sent` | `failed` | `dropped` (see worker section). Dedup is handled by querying `automation_logs` for `igCommentId` before processing.
 
 ### Instagram account connection (`/app/automations/connect`)
 - Button "Connect Instagram account" → redirects to `server/routes/instagram/connect.get.ts`
@@ -79,14 +79,28 @@ Fields:
 ### Comment processing — BullMQ worker
 - Webhook receiver: `server/routes/webhooks/instagram.post.ts`
   - Verify Meta webhook signature (`X-Hub-Signature-256` header using `INSTAGRAM_WEBHOOK_SECRET` env var)
-  - For each `comment` event: enqueue a `process-comment` BullMQ job
+  - For each `comment` event: enqueue a `process-comment` BullMQ job with payload `{ igAccountId, commentId, postId, commenterUsername, commentText, commentedAt }`
 - Worker (`server/workers/process-comment.ts`):
-  1. Load all active automations for the IG account, ordered by `priority ASC`
-  2. Check `automation_logs` — if comment ID already processed, skip
-  3. For each automation: check if `postId` matches AND (no keywords OR comment text contains at least one keyword, case-insensitive)
-  4. First match: send DM via Graph API (`POST /{ig-user-id}/messages`), substituting `{{username}}` with the commenter's username
-  5. Insert row in `automation_logs` with `status = 'sent'` or `'failed'`
+  1. **Staleness check**: if `commentedAt` is older than 23h55m → log `status = 'dropped'`, stop (outside the 24h Instagram DM window)
+  2. Check `automation_logs` for `igCommentId` — if already processed, skip
+  3. Load all active automations for the IG account, ordered by `priority ASC`
+  4. For each automation: check if `postId` matches AND (no keywords OR comment text contains at least one keyword, case-insensitive)
+  5. First match found → **check DM daily cap** (see below):
+     - If cap not reached: send DM via Graph API, insert `automation_logs` row `status = 'sent'` or `'failed'`
+     - If cap reached: re-enqueue this same job delayed until **start of next UTC day**, do not insert a log row yet
   6. Stop after first match
+
+### DM daily cap enforcement
+Defined in the plan limits utility (task 008). Logic in the worker:
+- Count rows in `automation_logs` where `automationId` belongs to this user AND `status = 'sent'` AND `triggeredAt >= start of current UTC day`
+- Compare against the user's plan limit: **100/day (Free)**, **200/hr enforced by Instagram (Pro — no app-level daily cap)**
+- If over cap: delay the BullMQ job with `{ delay: msUntilNextUTCMidnight() }` — BullMQ will re-run it tomorrow
+- On re-run: staleness check runs first (step 1), so jobs that can't be delivered within 24h are automatically dropped
+
+### `automation_logs` status values
+- `sent` — DM delivered successfully
+- `failed` — Graph API returned an error
+- `dropped` — comment was older than 23h55m when the job ran (past the delivery window)
 
 ### New environment variables
 ```
@@ -109,7 +123,10 @@ ENCRYPTION_KEY=   # 32-byte hex string for AES-256 token encryption
 - [ ] Webhook signature is verified before processing
 - [ ] Each comment is only processed once (dedup via `automation_logs`)
 - [ ] First matching automation fires; subsequent ones are skipped
-- [ ] Failed DM sends are logged with the error message
+- [ ] Failed DM sends are logged with `status = 'failed'` and the error message
+- [ ] Free users: DMs stop when daily cap (100) is reached; job is re-queued for next UTC day
+- [ ] Jobs older than 23h55m are logged as `dropped` and not sent
+- [ ] Pro users: no app-level daily cap applied
 - [ ] Access tokens are encrypted at rest
 - [ ] `pnpm lint` and `pnpm typecheck` pass
 

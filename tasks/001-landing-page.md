@@ -38,13 +38,34 @@ Nine feature cards in a 3-column grid (2-column on tablet, 1-column on mobile), 
 - "Set it and forget it" — Define rules once; Suica handles the rest 24/7
 - "Grow on autopilot" — Convert comment engagement into real conversations
 
+### Pricing section (`id="pricing"`)
+Two-column plan cards, centered, between features and footer. "Most popular" badge on Pro.
+
+**Free — $0/mo**
+- Personal link page at `su1.ca/username`
+- Up to 10 short links
+- 1 Instagram automation
+- Up to 100 DMs/day
+- Basic analytics (click count and total page visits only)
+- CTA: "Get started free" → `/login`
+
+**Pro — $9/mo or $7/mo billed annually**
+- Everything in Free
+- Up to 1,000 short links
+- Up to 20 Instagram automations
+- Instagram DM limit (200/hr, platform maximum)
+- Full analytics (referrer, device, country breakdown)
+- CTA: "Get Pro" → `/login` (Stripe Checkout handled post-login, in task 008)
+
+Add "Pricing" link to the landing page nav bar linking to `#pricing`.
+Add "See pricing" as a tertiary link in the hero alongside the two existing CTAs.
+
 ### Footer
 - Copyright line: `© {year} Suica`
 - Two text links: Privacy Policy (`/privacy`, stub route) and Terms of Service (`/terms`, stub route)
 
 ### General
 - Fully responsive (mobile-first)
-- No pricing section (planned for a later task)
 - Page should be statically prerendered (`routeRules: { '/': { prerender: true } }` already set)
 
 ## Acceptance criteria
@@ -53,6 +74,8 @@ Nine feature cards in a 3-column grid (2-column on tablet, 1-column on mobile), 
 - [ ] Nuxt UI theme uses green primary and rose secondary
 - [ ] All three feature groups render with their group headings
 - [ ] Feature grid is responsive (3 cols desktop → 2 tablet → 1 mobile)
+- [ ] Pricing section renders Free and Pro cards with correct limits and CTAs
+- [ ] Nav has a "Pricing" link scrolling to `#pricing`
 - [ ] Footer copyright year is dynamic
 - [ ] `pnpm lint` and `pnpm typecheck` pass
 
