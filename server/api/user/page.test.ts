@@ -88,10 +88,8 @@ describe('page.patch handler (auth)', () => {
   it('throws 401 if no session', async () => {
     mockRequireSession.mockRejectedValue({ statusCode: 401, message: 'Unauthorized' })
 
+    // requireSession throws before any other logic runs — pass a plain object as event
     const mod = await import('./page.patch')
-    const handler = mod.default
-
-    // eslint-disable-next-line ts/consistent-type-assertions
-    await expect(handler({} as unknown as Parameters<typeof handler>[0])).rejects.toMatchObject({ statusCode: 401 })
+    await expect(mod.default(Object.create(null))).rejects.toMatchObject({ statusCode: 401 })
   })
 })

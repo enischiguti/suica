@@ -39,6 +39,7 @@ describe('applyGetAvatarUploadUrl', () => {
 
     expect(result.uploadURL).toBe('https://upload.imagedelivery.net/direct-upload-url')
     expect(result.imageId).toBe('image-abc-123')
+    expect(result.imageDeliveryHash).toBe('hash-xyz')
 
     // Ensure the token is NOT in the response
     const resultStr = JSON.stringify(result)
@@ -99,10 +100,8 @@ describe('applyGetAvatarUploadUrl', () => {
   it('requires auth (401 if no session)', async () => {
     mockRequireSession.mockRejectedValue({ statusCode: 401, message: 'Unauthorized' })
 
+    // requireSession throws before any other logic runs — pass a plain object as event
     const mod = await import('./avatar-upload-url.post')
-    const handler = mod.default
-
-    // eslint-disable-next-line ts/consistent-type-assertions
-    await expect(handler({} as unknown as Parameters<typeof handler>[0])).rejects.toMatchObject({ statusCode: 401 })
+    await expect(mod.default(Object.create(null))).rejects.toMatchObject({ statusCode: 401 })
   })
 })

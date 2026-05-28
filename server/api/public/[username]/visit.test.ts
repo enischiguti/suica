@@ -1,4 +1,3 @@
-import type { H3Event } from 'h3'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // --- DB mocks ---
@@ -34,42 +33,16 @@ vi.mock('drizzle-orm', async (importOriginal) => {
 
 vi.stubGlobal('useRuntimeConfig', () => ({ analyticsSecret: 'test-salt' }))
 
-// h3 helpers used in the handler - mock them
-vi.mock('h3', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('h3')>()
-  return {
-    ...actual,
-    getValidatedRouterParams: vi.fn(async (event: { context: { params: { username: string } } }, _parse: unknown) => {
-      return { username: event.context.params.username }
-    }),
-    getRequestIP: vi.fn(() => '1.2.3.4'),
-    getRequestHeader: vi.fn((_event: unknown, name: string) => {
-      if (name === 'referer')
-        return 'https://google.com'
-      if (name === 'user-agent')
-        return 'Mozilla/5.0'
-      return null
-    }),
-  }
-})
+const { applyRecordPageVisit } = await import('./visit.post')
 
-// Import default handler after mocks
-const mod = await import('./visit.post')
-const handler = mod.default
-
-function makeEvent(username: string): H3Event {
-  // eslint-disable-next-line ts/consistent-type-assertions
-  return {
-    context: { params: { username } },
-    headers: new Headers({
-      'user-agent': 'Mozilla/5.0',
-      'referer': 'https://google.com',
-    }),
-    node: { req: { headers: {} }, res: {} },
-  } as unknown as H3Event
+const defaultCtx = {
+  ip: '1.2.3.4',
+  referrer: 'https://google.com',
+  userAgent: 'Mozilla/5.0',
+  country: null,
 }
 
-describe('visit.post handler', () => {
+describe('applyRecordPageVisit', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockValues.mockResolvedValue(undefined)
@@ -83,9 +56,8 @@ describe('visit.post handler', () => {
     mockSelect.mockReturnValue({ from: mockFrom })
     mockRecordVisit.mockResolvedValue(undefined)
 
-    const result = await handler(makeEvent('alice'))
+    await applyRecordPageVisit('alice', defaultCtx)
 
-    expect(result).toEqual({ ok: true })
     expect(mockRecordVisit).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'page:user-1' }),
     )
@@ -97,7 +69,7 @@ describe('visit.post handler', () => {
     mockFrom.mockReturnValue({ where: mockWhere })
     mockSelect.mockReturnValue({ from: mockFrom })
 
-    await expect(handler(makeEvent('nobody'))).rejects.toMatchObject({ statusCode: 404 })
+    await expect(applyRecordPageVisit('nobody', defaultCtx)).rejects.toMatchObject({ statusCode: 404 })
   })
 
   it('does not insert when duplicate IP within TTL (recordVisit skips insert)', async () => {
@@ -111,7 +83,7 @@ describe('visit.post handler', () => {
       // Do not call insert — simulates dedup
     })
 
-    await handler(makeEvent('alice'))
+    await applyRecordPageVisit('alice', defaultCtx)
 
     expect(mockInsert).not.toHaveBeenCalled()
   })

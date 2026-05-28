@@ -176,7 +176,7 @@ async function uploadAvatar(event: Event) {
 
   isUploadingAvatar.value = true
   try {
-    const { uploadURL, imageId } = await $fetch<{ uploadURL: string, imageId: string }>('/api/user/avatar-upload-url', {
+    const { uploadURL, imageId, imageDeliveryHash } = await $fetch<{ uploadURL: string, imageId: string, imageDeliveryHash: string }>('/api/user/avatar-upload-url', {
       method: 'POST',
     })
 
@@ -185,15 +185,7 @@ async function uploadAvatar(event: Event) {
 
     await fetch(uploadURL, { method: 'POST', body: formData })
 
-    const config = useRuntimeConfig()
-    const hash = config.public.cloudflareImagesHash
-    if (typeof hash === 'string' && hash) {
-      customAvatarUrl.value = `https://imagedelivery.net/${hash}/${imageId}/public`
-    }
-    else {
-      // Fallback: use imageId as identifier — user can save and we store the CF URL later
-      customAvatarUrl.value = imageId
-    }
+    customAvatarUrl.value = `https://imagedelivery.net/${imageDeliveryHash}/${imageId}/public`
 
     toast.add({ title: 'Avatar uploaded', color: 'success' })
   }

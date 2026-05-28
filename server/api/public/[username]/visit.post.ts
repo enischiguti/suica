@@ -8,9 +8,14 @@ import { detectDevice } from '~~/server/utils/device'
 
 const paramsSchema = z.object({ username: z.string() })
 
-export default defineEventHandler(async (event) => {
-  const { username } = await getValidatedRouterParams(event, paramsSchema.parse)
+export interface VisitContext {
+  ip: string
+  referrer: string | null
+  userAgent: string
+  country: string | null
+}
 
+export async function applyRecordPageVisit(username: string, ctx: VisitContext): Promise<void> {
   const db = useDB()
 
   const rows = await db
@@ -24,25 +29,32 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'User not found' })
   }
 
-  const ip = getRequestIP(event, { xForwardedFor: true }) ?? '0.0.0.0'
-  const referrer = getRequestHeader(event, 'referer') ?? null
-  const userAgent = getRequestHeader(event, 'user-agent') ?? ''
-  const country = getRequestHeader(event, 'cf-ipcountry') ?? getRequestHeader(event, 'x-vercel-ip-country') ?? null
-  const device = detectDevice(userAgent)
+  const device = detectDevice(ctx.userAgent)
 
   await recordVisit({
     key: `page:${user.id}`,
-    ip,
+    ip: ctx.ip,
     insert: async () => {
       await useDB().insert(pageVisits).values({
         id: crypto.randomUUID(),
         userId: user.id,
-        referrer,
+        referrer: ctx.referrer,
         device,
-        country,
+        country: ctx.country,
       })
     },
   })
+}
+
+export default defineEventHandler(async (event) => {
+  const { username } = await getValidatedRouterParams(event, paramsSchema.parse)
+
+  const ip = getRequestIP(event, { xForwardedFor: true }) ?? '0.0.0.0'
+  const referrer = getRequestHeader(event, 'referer') ?? null
+  const userAgent = getRequestHeader(event, 'user-agent') ?? ''
+  const country = getRequestHeader(event, 'cf-ipcountry') ?? getRequestHeader(event, 'x-vercel-ip-country') ?? null
+
+  await applyRecordPageVisit(username, { ip, referrer, userAgent, country })
 
   return { ok: true }
 })

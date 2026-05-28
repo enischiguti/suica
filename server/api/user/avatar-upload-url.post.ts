@@ -73,6 +73,7 @@ export async function applyGetAvatarUploadUrl(config: AvatarUploadConfig) {
   return {
     uploadURL: raw.result.uploadURL,
     imageId: raw.result.id,
+    imageDeliveryHash: config.cloudflareImagesHash,
   }
 }
 
