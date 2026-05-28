@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 useHead({
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -11,40 +11,52 @@ useHead({
   },
 })
 
-const title = 'Nuxt Starter Template'
-const description = 'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
+const title = 'Suica — Your internet presence, simplified'
+const description = 'Create your personal link page and automate your Instagram DMs — all in one place. Free to start.'
 
 useSeoMeta({
   title,
   description,
   ogTitle: title,
   ogDescription: description,
-  ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
-  twitterCard: 'summary_large_image',
 })
+
+const year = new Date().getFullYear()
 </script>
 
 <template>
   <UApp>
     <UHeader>
       <template #left>
-        <NuxtLink to="/">
-          <AppLogo class="w-auto h-6 shrink-0" />
+        <NuxtLink
+          to="/"
+          class="font-bold text-xl tracking-tight text-primary flex items-center gap-1"
+          aria-label="Suica home"
+        >
+          <span class="text-2xl" aria-hidden="true">🍉</span>
+          <span>Suica</span>
         </NuxtLink>
+      </template>
 
-        <TemplateMenu />
+      <template #body>
+        <UNavigationMenu
+          :items="[{ label: 'Pricing', to: '/#pricing' }]"
+          orientation="horizontal"
+        />
       </template>
 
       <template #right>
-        <UColorModeButton />
-
         <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
+          to="/login"
+          label="Log in"
           color="neutral"
           variant="ghost"
+        />
+        <UButton
+          to="/login"
+          label="Get started free"
+          color="primary"
+          class="hidden sm:flex"
         />
       </template>
     </UHeader>
@@ -53,23 +65,27 @@ useSeoMeta({
       <NuxtPage />
     </UMain>
 
-    <USeparator icon="i-simple-icons-nuxtdotjs" />
-
     <UFooter>
       <template #left>
         <p class="text-sm text-muted">
-          Built with Nuxt UI • © {{ new Date().getFullYear() }}
+          &copy; {{ year }} Suica
         </p>
       </template>
 
       <template #right>
         <UButton
-          to="https://github.com/nuxt-ui-templates/starter"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
+          to="/privacy"
+          label="Privacy Policy"
           color="neutral"
           variant="ghost"
+          size="sm"
+        />
+        <UButton
+          to="/terms"
+          label="Terms of Service"
+          color="neutral"
+          variant="ghost"
+          size="sm"
         />
       </template>
     </UFooter>

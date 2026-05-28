@@ -2,6 +2,12 @@ shellEmulator: true
 
 trustPolicy: no-downgrade
 
+trustPolicyExclude:
+  - chokidar@4.0.3
+  - semver@6.3.1
+  - tinyexec@1.2.2
+  - tinyclip@0.1.13
+
 allowBuilds:
   '@parcel/watcher': false
   '@tailwindcss/oxide': false

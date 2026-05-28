@@ -16,7 +16,8 @@
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test": "node node_modules/vitest/vitest.mjs run"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.108",
@@ -39,6 +40,7 @@
     "eslint": "^9.0.0",
     "simple-git-hooks": "^2.13.1",
     "typescript": "^6.0.3",
+    "vitest": "^4.1.7",
     "vue-tsc": "^3.3.0"
   },
   "simple-git-hooks": {

@@ -1,76 +1,213 @@
+<script setup lang="ts">
+const featureGroups = [
+  {
+    heading: 'Personal page',
+    features: [
+      {
+        icon: 'i-lucide-layout-list',
+        title: 'Your links, your way',
+        description: 'Curate everything that matters in one shareable page.',
+      },
+      {
+        icon: 'i-lucide-link',
+        title: 'Your own URL',
+        description: 'Live at su1.ca/username, yours to customize.',
+      },
+      {
+        icon: 'i-lucide-share-2',
+        title: 'Share anything',
+        description: 'Links, social profiles, contact info, and more.',
+      },
+    ],
+  },
+  {
+    heading: 'Short links',
+    features: [
+      {
+        icon: 'i-lucide-scissors',
+        title: 'Your personal URL shortener',
+        description: 'Create short links at su1.ca/username/anything in seconds.',
+      },
+      {
+        icon: 'i-lucide-pencil',
+        title: 'Edit the destination anytime',
+        description: 'Change where a link points without touching the URL.',
+      },
+      {
+        icon: 'i-lucide-bar-chart-2',
+        title: 'See who\'s clicking',
+        description: 'Track clicks, referrers, devices, and countries per link.',
+      },
+    ],
+  },
+  {
+    heading: 'Instagram automation',
+    features: [
+      {
+        icon: 'i-lucide-message-circle',
+        title: 'Auto-reply DMs',
+        description: 'Send a DM automatically when someone comments on your post.',
+      },
+      {
+        icon: 'i-lucide-clock',
+        title: 'Set it and forget it',
+        description: 'Define rules once; Suica handles the rest 24/7.',
+      },
+      {
+        icon: 'i-lucide-trending-up',
+        title: 'Grow on autopilot',
+        description: 'Convert comment engagement into real conversations.',
+      },
+    ],
+  },
+]
+
+const freePlanFeatures = [
+  'Personal link page at su1.ca/username',
+  'Up to 10 short links',
+  '1 Instagram automation',
+  'Up to 100 DMs/day',
+  'Basic analytics (click count and total page visits only)',
+]
+
+const proPlanFeatures = [
+  'Everything in Free',
+  'Up to 1,000 short links',
+  'Up to 20 Instagram automations',
+  'Instagram DM limit (200/hr, platform maximum)',
+  'Full analytics (referrer, device, country breakdown)',
+]
+</script>
+
 <template>
   <div>
+    <!-- Hero -->
     <UPageHero
-      title="Nuxt Starter Template"
-      description="A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours."
-      :links="[{
-        label: 'Get started',
-        to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-        target: '_blank',
-        trailingIcon: 'i-lucide-arrow-right',
-        size: 'xl',
-      }, {
-        label: 'Use this template',
-        to: 'https://github.com/nuxt-ui-templates/starter',
-        target: '_blank',
-        icon: 'i-simple-icons-github',
-        size: 'xl',
-        color: 'neutral',
-        variant: 'subtle',
-      }]"
-    />
+      title="Your internet presence, simplified"
+      description="Create your personal link page and automate your Instagram DMs — all in one place. Free to start."
+      class="relative overflow-hidden"
+    >
+      <template #description>
+        <p class="text-lg text-muted max-w-xl mx-auto">
+          Create your personal link page and automate your Instagram DMs — all in one place. Free to start.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3 justify-center">
+          <UButton
+            to="/login"
+            label="Get started free"
+            size="xl"
+            color="primary"
+            trailing-icon="i-lucide-arrow-right"
+          />
+          <UButton
+            to="#features"
+            label="See how it works"
+            size="xl"
+            color="neutral"
+            variant="subtle"
+          />
+        </div>
+        <div class="mt-3">
+          <UButton
+            to="#pricing"
+            label="See pricing"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+          />
+        </div>
+      </template>
 
+      <template #title>
+        <div class="flex items-center justify-center gap-3 flex-wrap">
+          <span>Your internet presence,</span>
+          <span class="text-primary">simplified</span>
+        </div>
+      </template>
+
+      <!-- Watermelon decorative element -->
+      <template #bottom>
+        <div class="flex justify-center mt-8 select-none pointer-events-none" aria-hidden="true">
+          <span class="text-8xl opacity-20 rotate-12">🍉</span>
+        </div>
+      </template>
+    </UPageHero>
+
+    <!-- Features -->
     <UPageSection
       id="features"
-      title="Everything you need to build modern Nuxt apps"
-      description="Start with a solid foundation. This template includes all the essentials for building production-ready applications with Nuxt UI's powerful component system."
-      :features="[{
-        icon: 'i-lucide-rocket',
-        title: 'Production-ready from day one',
-        description: 'Pre-configured with TypeScript, ESLint, Tailwind CSS, and all the best practices. Focus on building features, not setting up tooling.',
-      }, {
-        icon: 'i-lucide-palette',
-        title: 'Beautiful by default',
-        description: 'Leveraging Nuxt UI\'s design system with automatic dark mode, consistent spacing, and polished components that look great out of the box.',
-      }, {
-        icon: 'i-lucide-zap',
-        title: 'Lightning fast',
-        description: 'Optimized for performance with SSR/SSG support, automatic code splitting, and edge-ready deployment. Your users will love the speed.',
-      }, {
-        icon: 'i-lucide-blocks',
-        title: '100+ components included',
-        description: 'Access Nuxt UI\'s comprehensive component library. From forms to navigation, everything is accessible, responsive, and customizable.',
-      }, {
-        icon: 'i-lucide-code-2',
-        title: 'Developer experience first',
-        description: 'Auto-imports, hot module replacement, and TypeScript support. Write less boilerplate and ship more features.',
-      }, {
-        icon: 'i-lucide-shield-check',
-        title: 'Built for scale',
-        description: 'Enterprise-ready architecture with proper error handling, SEO optimization, and security best practices built-in.',
-      }]"
-    />
+      title="Everything you need to grow online"
+      description="From your personal link page to Instagram DM automation — Suica does it all."
+    >
+      <div class="space-y-12">
+        <div
+          v-for="group in featureGroups"
+          :key="group.heading"
+        >
+          <h3 class="text-sm font-semibold uppercase tracking-widest text-muted mb-6 text-center">
+            {{ group.heading }}
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <UPageCard
+              v-for="feature in group.features"
+              :key="feature.title"
+              :icon="feature.icon"
+              :title="feature.title"
+              :description="feature.description"
+            />
+          </div>
+        </div>
+      </div>
+    </UPageSection>
 
-    <UPageSection>
-      <UPageCTA
-        title="Ready to build your next Nuxt app?"
-        description="Join thousands of developers building with Nuxt and Nuxt UI. Get this template and start shipping today."
-        variant="subtle"
-        :links="[{
-          label: 'Start building',
-          to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-          target: '_blank',
-          trailingIcon: 'i-lucide-arrow-right',
-          color: 'neutral',
-        }, {
-          label: 'View on GitHub',
-          to: 'https://github.com/nuxt-ui-templates/starter',
-          target: '_blank',
-          icon: 'i-simple-icons-github',
-          color: 'neutral',
-          variant: 'outline',
-        }]"
-      />
+    <!-- Pricing -->
+    <UPageSection
+      id="pricing"
+      title="Simple, transparent pricing"
+      description="Start for free. Upgrade when you need more."
+    >
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <!-- Free plan -->
+        <UPricingCard
+          title="Free"
+          description="Get started at no cost."
+          price="$0"
+          cycle="/mo"
+          :features="freePlanFeatures"
+          :button="{
+            label: 'Get started free',
+            to: '/login',
+            color: 'neutral',
+            variant: 'outline',
+          }"
+        />
+
+        <!-- Pro plan -->
+        <UPricingCard
+          title="Pro"
+          description="For creators who want to grow faster."
+          price="$9"
+          cycle="/mo"
+          :features="proPlanFeatures"
+          highlight
+          badge="Most popular"
+          :button="{
+            label: 'Get Pro',
+            to: '/login',
+            color: 'primary',
+          }"
+        >
+          <template #price>
+            <div>
+              <span class="text-4xl font-bold">$9</span>
+              <span class="text-muted">/mo</span>
+              <p class="text-sm text-muted mt-1">
+                or $7/mo billed annually
+              </p>
+            </div>
+          </template>
+        </UPricingCard>
+      </div>
     </UPageSection>
   </div>
 </template>
