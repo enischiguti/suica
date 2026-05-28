@@ -4,6 +4,7 @@ import { useDB } from '~~/server/db/index'
 import { automationLogs, automations, instagramAccounts } from '~~/server/db/schema'
 import { FREE_DAILY_DM_CAP, getDailyDmCount, msUntilNextUTCMidnight } from '~~/server/utils/dm-cap'
 import { decryptToken } from '~~/server/utils/encryption'
+import { getUserPlan } from '~~/server/utils/plan'
 import { createQueue, createWorker } from '~~/server/utils/queue'
 
 export interface ProcessCommentJob {
@@ -108,12 +109,15 @@ export async function processComment(data: ProcessCommentJob): Promise<void> {
     return
   }
 
-  // 6. DM cap check
-  const dmCount = await getDailyDmCount(userId)
-  if (dmCount >= FREE_DAILY_DM_CAP) {
-    const queue = createQueue<ProcessCommentJob>('process-comment')
-    await queue.add('process-comment', data, { delay: msUntilNextUTCMidnight() })
-    return
+  // 6. DM cap check (only for free plan)
+  const userPlan = await getUserPlan(userId)
+  if (userPlan === 'free') {
+    const dmCount = await getDailyDmCount(userId)
+    if (dmCount >= FREE_DAILY_DM_CAP) {
+      const queue = createQueue<ProcessCommentJob>('process-comment')
+      await queue.add('process-comment', data, { delay: msUntilNextUTCMidnight() })
+      return
+    }
   }
 
   // 7. Send DM

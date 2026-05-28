@@ -12,6 +12,7 @@ export const users = pgTable('users', {
   stripePriceId: text('stripe_price_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
   subscriptionStatus: text('subscription_status'),
+  billingInterval: text('billing_interval').default('monthly'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })

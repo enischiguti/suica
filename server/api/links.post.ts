@@ -1,8 +1,9 @@
-import { and, eq } from 'drizzle-orm'
+import { and, count, eq } from 'drizzle-orm'
 
 import { createError, defineEventHandler, readBody } from 'h3'
 import { useDB } from '~~/server/db/index'
 import { links } from '~~/server/db/schema'
+import { canAddLink } from '~~/server/utils/plan'
 import { requireSession } from '~~/server/utils/session'
 import { generateUniqueSlug, isValidSlug } from '~~/server/utils/slug'
 
@@ -32,6 +33,18 @@ export async function applyCreateLink(userId: string, body: CreateLinkBody) {
 
   if (typeof destinationUrl !== 'string' || !isValidUrl(destinationUrl)) {
     throw createError({ statusCode: 400, message: 'A valid destination URL is required' })
+  }
+
+  // Plan enforcement
+  const allowed = await canAddLink(userId)
+  if (!allowed) {
+    const db = useDB()
+    const countResult = await db.select({ count: count() }).from(links).where(eq(links.userId, userId))
+    const current = countResult[0]?.count ?? 0
+    throw createError({
+      statusCode: 403,
+      data: { code: 'LIMIT_REACHED', limit: 10, current },
+    })
   }
 
   const db = useDB()

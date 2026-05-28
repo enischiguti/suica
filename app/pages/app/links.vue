@@ -6,6 +6,33 @@ definePageMeta({
 
 const sessionState = authClient.useSession()
 const toast = useToast()
+const { showUpgradePrompt } = useUpgradePrompt()
+
+interface BillingData {
+  plan: 'free' | 'pro'
+  usage: { links: number, automations: number, dmsToday: number }
+}
+
+const { data: billingData } = await useFetch<BillingData>('/api/user/billing')
+
+const linkUsagePercent = computed(() => {
+  const used = billingData.value?.usage.links ?? 0
+  const limit = billingData.value?.plan === 'pro' ? 1000 : 10
+  return Math.min(100, Math.round((used / limit) * 100))
+})
+
+const showUsageWarning = computed(() => linkUsagePercent.value >= 80)
+const isDismissed = ref(false)
+
+function isLimitReachedError(err: unknown): boolean {
+  if (err !== null && typeof err === 'object'
+    && 'data' in err && err.data !== null && typeof err.data === 'object'
+    && 'data' in err.data && err.data.data !== null && typeof err.data.data === 'object'
+    && 'code' in err.data.data) {
+    return err.data.data.code === 'LIMIT_REACHED'
+  }
+  return false
+}
 
 // Types
 interface LinkRow {
@@ -100,6 +127,11 @@ async function submitForm() {
     await refreshLinks()
   }
   catch (err: unknown) {
+    if (isLimitReachedError(err)) {
+      isFormModalOpen.value = false
+      showUpgradePrompt('You\'ve reached the link limit on the Free plan. Upgrade to Pro for up to 1,000 links.')
+      return
+    }
     const message = err instanceof Error ? err.message : 'Something went wrong'
     toast.add({ title: 'Error', description: message, color: 'error' })
   }
@@ -188,6 +220,28 @@ async function openStatsModal(link: LinkRow) {
 
 <template>
   <UContainer class="py-8 space-y-6">
+    <!-- Usage warning banner -->
+    <UAlert
+      v-if="showUsageWarning && !isDismissed"
+      :color="linkUsagePercent >= 100 ? 'error' : 'warning'"
+      :title="linkUsagePercent >= 100 ? 'Link limit reached' : 'Approaching link limit'"
+      :description="linkUsagePercent >= 100
+        ? 'You\'ve reached the maximum number of links on the Free plan. Upgrade to Pro to add more.'
+        : 'You\'re using 80%+ of your link allowance. Upgrade to Pro for up to 1,000 links.'"
+      close-button
+      @close="isDismissed = true"
+    >
+      <template #actions>
+        <UButton
+          size="sm"
+          to="/app/settings/billing"
+          color="primary"
+        >
+          Upgrade to Pro
+        </UButton>
+      </template>
+    </UAlert>
+
     <!-- Top bar -->
     <div class="flex items-center justify-between gap-4">
       <h1 class="text-2xl font-bold">

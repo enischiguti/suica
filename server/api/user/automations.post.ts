@@ -1,8 +1,9 @@
-import { and, eq, max } from 'drizzle-orm'
+import { and, count, eq, max } from 'drizzle-orm'
 import { createError, defineEventHandler, readValidatedBody } from 'h3'
 import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { automations, instagramAccounts } from '~~/server/db/schema'
+import { canAddAutomation } from '~~/server/utils/plan'
 import { requireSession } from '~~/server/utils/session'
 
 const createAutomationSchema = z.object({
@@ -18,6 +19,17 @@ export type CreateAutomationBody = z.infer<typeof createAutomationSchema>
 
 export async function applyCreateAutomation(userId: string, body: CreateAutomationBody) {
   const db = useDB()
+
+  // Plan enforcement
+  const allowed = await canAddAutomation(userId)
+  if (!allowed) {
+    const countResult = await db.select({ count: count() }).from(automations).where(eq(automations.userId, userId))
+    const current = countResult[0]?.count ?? 0
+    throw createError({
+      statusCode: 403,
+      data: { code: 'LIMIT_REACHED', limit: 1, current },
+    })
+  }
 
   const igAccount = await db
     .select({ id: instagramAccounts.id })

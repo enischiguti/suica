@@ -103,8 +103,12 @@ describe('automations CRUD', () => {
       mockSelectRows.mockImplementation(() => {
         const idx = callCount++
         if (idx === 0)
-          return makeSelectChain([{ id: 'acc-1' }]) // igAccount ownership check
+          return makeSelectChain([{ subscriptionStatus: null }]) // getUserPlan (free)
         if (idx === 1)
+          return makeSelectChain([{ count: 0 }]) // canAddAutomation count
+        if (idx === 2)
+          return makeSelectChain([{ id: 'acc-1' }]) // igAccount ownership check
+        if (idx === 3)
           return makeSelectChain([{ maxPriority: 2 }]) // max priority
         return makeSelectChain([])
       })
@@ -141,8 +145,12 @@ describe('automations CRUD', () => {
       mockSelectRows.mockImplementation(() => {
         const idx = callCount++
         if (idx === 0)
-          return makeSelectChain([{ id: 'acc-1' }]) // igAccount ownership check
+          return makeSelectChain([{ subscriptionStatus: null }]) // getUserPlan (free)
         if (idx === 1)
+          return makeSelectChain([{ count: 0 }]) // canAddAutomation count
+        if (idx === 2)
+          return makeSelectChain([{ id: 'acc-1' }]) // igAccount ownership check
+        if (idx === 3)
           return makeSelectChain([{ maxPriority: null }]) // max priority
         return makeSelectChain([])
       })

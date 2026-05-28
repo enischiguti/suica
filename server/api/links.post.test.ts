@@ -21,6 +21,10 @@ vi.mock('~~/server/utils/slug', () => ({
   generateUniqueSlug: vi.fn(async (title: string) => title.toLowerCase().replace(/\s+/g, '-')),
 }))
 
+vi.mock('~~/server/utils/plan', () => ({
+  canAddLink: vi.fn(async () => true),
+}))
+
 vi.mock('drizzle-orm', async (importOriginal) => {
   const actual = await importOriginal<typeof import('drizzle-orm')>()
   return { ...actual, eq: vi.fn(() => 'eq-result'), and: vi.fn(() => 'and-result') }
