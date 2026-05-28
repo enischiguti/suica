@@ -22,6 +22,17 @@ Platforms for socials: `instagram | x | tiktok | youtube | linkedin | github | w
 
 Add `customAvatarUrl` column to `page_profiles`: `text('custom_avatar_url')` nullable. When set, it takes precedence over `users.avatarUrl` on the public page and in the editor preview.
 
+**`page_visits` table** (`server/db/schema/page-visits.ts`):
+```
+id        text  PK
+userId    text  FK → users.id (cascade delete)
+visitedAt timestamp  defaultNow()
+referrer  text  nullable
+device    text  nullable  ('mobile' | 'tablet' | 'desktop')
+country   text  nullable
+```
+Raw IPs are never stored. Dedup uses the `recordVisit` utility from task 004.
+
 ### Preset themes (stored as `theme` string)
 Define in `app/utils/themes.ts` (or similar) — each theme has a `bg`, `cardBg`, `text`, `button` color set:
 - `default` — white background, dark text, green buttons
@@ -49,6 +60,20 @@ Actually implement this as a Nuxt page:
 - No auth required
 - Returns: `{ user: { name, avatarUrl, username }, profile: { bio, theme, socials, customAvatarUrl }, links: Link[] }`
 - Avatar resolution logic lives in the API: return `customAvatarUrl ?? avatarUrl` as the effective avatar
+
+**`POST /api/public/[username]/visit`** (`server/api/public/[username]/visit.post.ts`):
+- No auth required
+- Called client-side from `onMounted` in `app/pages/[username].vue` (fire-and-forget fetch, no await)
+- Derives referrer, device, country from request headers (same logic as link clicks in task 005)
+- Calls `recordVisit` from `server/utils/analytics.ts`:
+  ```ts
+  recordVisit({
+    key: `page:${user.id}`,
+    ip: getRequestIP(event, { xForwardedFor: true }) ?? '',
+    insert: () => useDB().insert(pageVisits).values({ ... }),
+  })
+  ```
+- Returns `{ ok: true }` — client ignores the response
 - 404 if user not found
 
 ### Page editor `/app/page`
@@ -62,7 +87,13 @@ Actually implement this as a Nuxt page:
   - **Socials**: add/remove social platform + URL pairs (up to 7 platforms)
   - **Theme picker**: 4 preset cards showing a color swatch, clicking selects it
   - **Links on page**: list of the user's links with a toggle for `showOnPage` (links to `/app/links` to create new ones)
+- **Stats** (read-only section at the bottom of the editor): total page visits, top referrers (top 5), device breakdown, top countries — fetched from `GET /api/user/page/stats`
 - Save button: `PATCH /api/user/page` — saves bio, socials, theme, customAvatarUrl; returns updated profile
+
+**`GET /api/user/page/stats`** (`server/api/user/page/stats.get.ts`):
+- Requires auth
+- Returns aggregated counts from `page_visits` for the authenticated user:
+  `{ total, referrers: [{ value, count }], devices: [{ value, count }], countries: [{ value, count }] }`
 
 ### Avatar upload — Cloudflare Images flow
 
@@ -110,6 +141,10 @@ CLOUDFLARE_IMAGES_HASH=   # the hash in imagedelivery.net URLs, found in CF dash
 - [ ] Cloudflare token is never sent to the client
 - [ ] Link `showOnPage` toggles in the editor update immediately
 - [ ] Live preview in the editor reflects current settings without a page reload
+- [ ] Visiting `su1.ca/username` records a page visit (referrer, device, country)
+- [ ] A second visit from the same IP within 1 hour is not counted
+- [ ] Raw IPs are never written to the database
+- [ ] Page stats section in the editor shows total visits, referrers, devices, countries
 - [ ] Public page is accessible without auth
 - [ ] `pnpm lint` and `pnpm typecheck` pass
 

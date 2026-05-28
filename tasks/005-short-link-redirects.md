@@ -24,11 +24,21 @@ Handle incoming requests to `su1.ca/username/slug`: look up the link, record the
 - Handled natively by Nuxt's `app/pages/[username].vue` (implemented in task 006) — no server route needed here
 
 ### Click recording
-- Insert into `link_clicks` via `useDB()` — fire-and-forget: do not await, use `.catch(console.error)` to swallow errors without blocking the redirect
+- Use the `recordVisit` analytics utility from task 004 (`server/utils/analytics.ts`)
+- Call it fire-and-forget after `sendRedirect` (`.catch(console.error)`, never block the redirect):
+  ```ts
+  recordVisit({
+    key: `link:${link.id}`,
+    ip: getRequestIP(event, { xForwardedFor: true }) ?? '',
+    insert: () => useDB().insert(linkClicks).values({ ... }),
+  }).catch(console.error)
+  ```
+- Depends on task 004 being completed first (analytics utility must exist)
 
 ## Acceptance criteria
 - [ ] `su1.ca/existing-user/valid-slug` redirects to the destination URL with a 302
 - [ ] Click is recorded with referrer, device, country
+- [ ] Repeat visits from the same IP within 1 hour are not double-counted
 - [ ] `su1.ca/existing-user/invalid-slug` returns 404
 - [ ] `su1.ca/nonexistent-user/anything` returns 404
 - [ ] Inactive links (isActive = false) return 404, not redirect

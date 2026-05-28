@@ -29,6 +29,7 @@ referrer  text  nullable
 device    text  nullable  ('mobile' | 'tablet' | 'desktop')
 country   text  nullable
 ```
+Note: raw IPs are never stored. Dedup is handled via Redis (see analytics utility below).
 
 Export both from `server/db/schema/index.ts`. Run `pnpm db:push`.
 
@@ -63,9 +64,31 @@ Export both from `server/db/schema/index.ts`. Run `pnpm db:push`.
 - Empty state when no links exist
 - Create/Edit form fields: Title, Destination URL, Slug (optional, shows auto-preview), "Show on personal page" toggle
 
+### Analytics utility (`server/utils/analytics.ts`)
+
+Shared across links (task 004/005) and personal page (task 006).
+
+```ts
+recordVisit(options: {
+  key: string        // namespaced dedup key, e.g. 'link:abc123' or 'page:xyz'
+  ip: string         // raw request IP — hashed internally, never stored
+  insert: () => Promise<void>  // DB insert to run if not a duplicate
+  ttlSeconds?: number          // dedup window, default 3600 (1 hour)
+}): Promise<void>
+```
+
+Implementation:
+1. Compute `hash = SHA-256(ip + ":" + dailySalt)` where `dailySalt = SHA-256(ANALYTICS_SALT + currentUTCDate)` — rotates daily so hashes can't be correlated across days
+2. Build Redis key: `dedup:{key}:{hash}`
+3. `SET dedup:{key}:{hash} 1 EX {ttlSeconds} NX` — atomic: returns `null` if key already existed
+4. If result is `null` (duplicate within window) → return early, skip insert
+5. Otherwise → call `insert()` to write the DB row
+
+`ANALYTICS_SALT` is a secret env var (any random string). Add to `.env.example`.
+
 ### Click analytics per link
 - Clicking the click count opens a simple stats drawer/modal showing:
-  - Total clicks
+  - Total clicks (unique per IP per hour)
   - Top referrers (top 5)
   - Device breakdown (mobile / tablet / desktop %)
   - Top countries (top 5)
@@ -79,6 +102,8 @@ Export both from `server/db/schema/index.ts`. Run `pnpm db:push`.
 - [ ] Editing a link updates destination URL and other fields
 - [ ] Deleting a link removes it and its click records
 - [ ] Click stats modal shows referrers, devices, and countries
+- [ ] A second redirect from the same IP within 1 hour is not recorded as a new click
+- [ ] Raw IPs are never written to the database
 - [ ] All API routes validate auth and ownership
 - [ ] `pnpm lint` and `pnpm typecheck` pass
 
