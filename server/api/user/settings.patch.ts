@@ -7,18 +7,13 @@ import { users } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
 
 const settingsSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().trim().min(1),
 })
 
-export async function applySettingsUpdate(userId: string, body: unknown) {
-  const payload = body !== null && typeof body === 'object' ? body : {}
-  const name = 'name' in payload ? payload.name : undefined
+export type SettingsBody = z.infer<typeof settingsSchema>
 
-  if (typeof name !== 'string' || name.trim().length === 0) {
-    throw createError({ statusCode: 400, message: 'Name must be a non-empty string' })
-  }
-
-  const trimmedName = name.trim()
+export async function applySettingsUpdate(userId: string, body: SettingsBody) {
+  const trimmedName = body.name
 
   const updated = await useDB()
     .update(users)

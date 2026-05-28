@@ -33,22 +33,6 @@ describe('applySettingsUpdate', () => {
     vi.clearAllMocks()
   })
 
-  it('throws 400 when name is missing', async () => {
-    await expect(applySettingsUpdate('user-1', {})).rejects.toMatchObject({ statusCode: 400 })
-  })
-
-  it('throws 400 when name is empty string', async () => {
-    await expect(applySettingsUpdate('user-1', { name: '' })).rejects.toMatchObject({ statusCode: 400 })
-  })
-
-  it('throws 400 when name is only whitespace', async () => {
-    await expect(applySettingsUpdate('user-1', { name: '   ' })).rejects.toMatchObject({ statusCode: 400 })
-  })
-
-  it('throws 400 when body is not an object', async () => {
-    await expect(applySettingsUpdate('user-1', null)).rejects.toMatchObject({ statusCode: 400 })
-  })
-
   it('updates DB and returns user when name is valid', async () => {
     const updatedUser = { id: 'user-1', name: 'Alice Smith', email: 'test@example.com' }
     setupDbMock([updatedUser])
@@ -58,12 +42,17 @@ describe('applySettingsUpdate', () => {
     expect(mockUpdate).toHaveBeenCalled()
   })
 
-  it('trims whitespace from name before saving', async () => {
+  it('saves pre-trimmed name from Zod (no extra trimming needed)', async () => {
     const updatedUser = { id: 'user-1', name: 'Bob Jones', email: 'test@example.com' }
     setupDbMock([updatedUser])
 
-    const result = await applySettingsUpdate('user-1', { name: '  Bob Jones  ' })
+    const result = await applySettingsUpdate('user-1', { name: 'Bob Jones' })
     expect(result).toEqual(updatedUser)
     expect(mockSet).toHaveBeenCalledWith(expect.objectContaining({ name: 'Bob Jones' }))
+  })
+
+  it('throws 404 when user is not found in DB', async () => {
+    setupDbMock([])
+    await expect(applySettingsUpdate('missing-user', { name: 'Alice' })).rejects.toMatchObject({ statusCode: 404 })
   })
 })

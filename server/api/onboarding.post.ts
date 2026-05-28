@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { useDB } from '~~/server/db/index'
 import { users } from '~~/server/db/schema'
 import { requireSession } from '~~/server/utils/session'
-import { isReservedUsername, isValidUsernameFormat } from '~/utils/username'
+import { isReservedUsername } from '~/utils/username'
 
 const onboardingSchema = z.object({
   username: z.string().min(3).max(32).regex(/^[a-z0-9_-]+$/),
@@ -15,10 +15,6 @@ export default defineEventHandler(async (event) => {
   const session = await requireSession(event)
 
   const { username, useCase } = await readValidatedBody(event, onboardingSchema.parse)
-
-  if (!isValidUsernameFormat(username)) {
-    throw createError({ statusCode: 400, message: 'Invalid username format' })
-  }
 
   if (isReservedUsername(username)) {
     throw createError({ statusCode: 400, message: 'Username not available' })
